@@ -15,12 +15,17 @@ format:
 Report prepared by: 
 1. Dr Aina Syazwani bt Aziz 
 2. Dr Nur Shuhaiza bt Supian
+3. Dr Muhammad Aminnudin
 
 # Introduction
 
-Many designs in epidemiological research generate multilevel data, which presents unique challenges for researchers. Multilevel data often arise from “nested” data structures, where observations are nested within larger units. For example, in longitudinal epidemiological research, repeated measures are nested within individuals, creating a multilevel data structure.
+In healthcare settings, particularly in hospital environments, nurses' well-being and performance are closely linked to their sleep quality. Sleep disturbances among nurses have been associated with reduced job performance, increased risk of errors, and compromised patient safety. To better understand the factors influencing sleep quality, it is important to consider the organizational structure within which nurses operate. Specifically, nurses are nested within clinical departments, which are themselves nested within larger institutional frameworks such as hospitals. This hierarchical structure creates dependencies among observations that violate the assumptions of traditional single-level regression models.
 
-The primary issue with nested data structures is that they violate the independence assumption required by classic statistical techniques such as ANOVA and OLS multiple regression. This violation can lead to excessive Type I errors and biased parameter estimates when using these traditional methods. To address these issues, multilevel modeling is often necessary. Multilevel modeling can account for the nested nature of the data, providing more accurate and reliable results by properly handling the dependencies within the data.
+In this study, multilevel modeling is employed to analyze sleep scores among nurses working in two tertiary hospitals: Hospital Universiti Sains Malaysia (HUSM) and Hospital Raja Perempuan Zainab II (HRPZ II). The data exhibit a three-level structure: individual nurses (Level 1) are nested within departments (Level 2), which are in turn nested within hospitals (Level 3). A multilevel modeling approach allows for the partitioning of variance in sleep scores across these levels, enabling a more accurate understanding of both individual and contextual factors that may influence sleep quality.
+
+The primary outcome variable, sleep score, is continuous and reflects the overall sleep quality of each nurse. By incorporating random intercepts at both the department and hospital levels, the model accounts for unobserved heterogeneity that may arise from departmental culture, workload, shift patterns, and institutional policies. Fixed effects can be included to assess how individual characteristics (e.g., age, shift type, workload) and group-level factors (e.g., department type or hospital) impact sleep quality.
+
+Multilevel analysis not only improves the precision of estimates by accounting for clustering but also offers insights into how much of the variability in sleep outcomes is attributable to departments or hospitals. This approach supports more targeted and level-specific interventions to enhance nurse well-being and, by extension, healthcare quality.
 
 # Methodologies
 ## About the Data
