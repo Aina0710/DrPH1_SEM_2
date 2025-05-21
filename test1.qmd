@@ -29,13 +29,11 @@ Multilevel analysis not only improves the precision of estimates by accounting f
 
 # Methodologies
 ## About the Data
-The data comprises 470 participants distributed across two tertiary hospitals in Kelantan. This data structure is nested because multiple nurses were sampled from each tertiary hospitals. And from each hospital, the nurses were sampled form four different departments. Therefore, the data has three levels of sampling: Level 1 includes staff (each row in the dataset), Level 2 includes departments (Emergency, Pediatrics, Surgical, Medical) and Level 3 includes tertiary hospitals (HUSM, HRPZ II).
+The data comprises 468 participants distributed across two tertiary hospitals in Kelantan. 
 
+The dataset is structured hierarchically, with individual nurses (Level 1) nested within hospital departments (Level 2), which are further nested within tertiary hospitals (Level 3). Nurses were drawn from multiple departments, including emergency, pediatrics, surgical, and medical wards—each with unique work demands and environmental factors potentially influencing sleep.
 
-Given this nested structure, the dataset is suitable for hierarchical data analysis. In our linear mixed model, the dependent or outcome variable, Sleep Quality Score, is predicted by the fixed factors of: 
-i-	Working hours (continuous)
-ii-	Working Schedules (shift/non-shift)
-iii-	Comorbidity (yes/no)
+The outcome of interest is a continuous sleep score (total_score), which quantitatively measures sleep quality. Explanatory variables include both individual-level characteristics (e.g., age, gender, marital status, position, years of service, work hours, presence of comorbidities) and department- or hospital-level factors (e.g., type of department, institutional policies, shift schedules).
 
 # Load packages
 
