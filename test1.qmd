@@ -77,12 +77,31 @@ sleep %>% select(-id) %>%
 
 ```
 
+Plot
 ```{r}
-sleep<- sleep %>% 
+sleep %>% ggplot(aes(x=hospital, y = total_score)) +
+  geom_point() +
+  geom_smooth(method = lm)
 ```
 
+```{r}
+sleep %>% ggplot(aes(x=hospital, y= total_score,
+                     col= department, group= department)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
 
 # Single level analysis
+
+Single level analysis is used to model a single-level analysis (i.e., no clustering or grouping is accounted for) of the numerical outcome (total_score). This model is also call null model. 
+
+```{r}
+sleep.lm<- lm(total_score ~ 1, data = sleep)
+summary(sleep.lm)
+
+```{r}
+tidy(sleep.lm)
+```
 
 # Multilevel analysis
 
