@@ -1,0 +1,108 @@
+---
+title: "Correlated numerical"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
+---
+
+Report prepared by: 
+1. Dr Aina Syazwani bt Aziz 
+2. Dr Nur Shuhaiza bt Supian
+
+# Introduction
+
+Many designs in epidemiological research generate multilevel data, which presents unique challenges for researchers. Multilevel data often arise from “nested” data structures, where observations are nested within larger units. For example, in longitudinal epidemiological research, repeated measures are nested within individuals, creating a multilevel data structure.
+
+The primary issue with nested data structures is that they violate the independence assumption required by classic statistical techniques such as ANOVA and OLS multiple regression. This violation can lead to excessive Type I errors and biased parameter estimates when using these traditional methods. To address these issues, multilevel modeling is often necessary. Multilevel modeling can account for the nested nature of the data, providing more accurate and reliable results by properly handling the dependencies within the data.
+
+# Methodologies
+## About the Data
+The data comprises 470 participants distributed across two tertiary hospitals in Kelantan. This data structure is nested because multiple nurses were sampled from each tertiary hospitals. And from each hospital, the nurses were sampled form four different departments. Therefore, the data has three levels of sampling: Level 1 includes staff (each row in the dataset), Level 2 includes departments (Emergency, Pediatrics, Surgical, Medical) and Level 3 includes tertiary hospitals (HUSM, HRPZ II).
+
+
+Given this nested structure, the dataset is suitable for hierarchical data analysis. In our linear mixed model, the dependent or outcome variable, Sleep Quality Score, is predicted by the fixed factors of: 
+i-	Working hours (continuous)
+ii-	Working Schedules (shift/non-shift)
+iii-	Comorbidity (yes/no)
+
+# Load packages
+
+### General packages
+```{r}
+library(tidyverse)
+library(gtsummary)
+library(kableExtra)
+library(plotly)
+library(haven)
+library(broom.mixed)
+library(DT)
+library(readxl)
+```
+
+### Packages for multilevel
+```{r}
+library(lme4)
+library(lmerTest)
+```
+
+# Read data
+```{r}
+sleep <- read_excel("sleep2.xlsx")
+glimpse(sleep)
+```
+
+# Data wrangling
+```{r}
+sleep<-sleep %>% mutate_if(is.character,~ as_factor(.))
+glimpse(sleep)
+```
+# Exploratory Data Analysis
+```{r}
+summary(sleep)
+sleep %>% select(-id) %>% 
+  tbl_summary(
+    statistic = list(all_continuous() ~
+                                 "{mean} ({sd})")) %>% 
+  bold_labels()
+
+```
+
+```{r}
+sleep<- sleep %>% 
+```
+
+
+# Single level analysis
+
+# Multilevel analysis
+
+# Random intercept model
+
+## Explanatory variable
+
+## Prediction
+
+## Plot
+
+## Variance
+
+### Between hospital
+
+### Within hospital
+
+# Random slope model
+
+## Model
+
+## Fitted value
+
+# Comparing model (RI vs RS)
+
+# Interpretation
