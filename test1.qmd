@@ -29,7 +29,7 @@ Multilevel analysis not only improves the precision of estimates by accounting f
 
 # Methodologies
 ## About the Data
-The data comprises 462 participants distributed across two tertiary hospitals in Kelantan. The data was collected for MPH study.
+The data comprises 462 participants distributed across two tertiary hospitals in Kelantan. The data was collected for MPH study. 
 
 The dataset is structured hierarchically, with individual nurses (Level 1) nested within hospital departments (Level 2), which are further nested within tertiary hospitals (Level 3). Nurses were drawn from multiple departments, including emergency, pediatrics, surgical, and medical wards—each with unique work demands and environmental factors potentially influencing sleep.
 
@@ -56,6 +56,7 @@ o) medication_error: history of medication error (yes/no)
 p) comorbid: yes/no
 q) total_score: total score from validated questionnaire (continuos variable)
 r) sleep_quality: poor or good
+
 
 # Load packages
 
@@ -115,17 +116,41 @@ sleep %>% ggplot(aes(x=hospital, y= total_score,
 
 # Single level analysis
 
-Single level analysis is used to model a single-level analysis (i.e., no clustering or grouping is accounted for) of the numerical outcome (total_score).  
+Single level analysis is used to model a single-level analysis (i.e., no clustering or grouping is accounted for) of the numerical outcome (total_score). 
 
 ```{r}
 sleep.lm<- lm(total_score ~ 1, data = sleep)
 summary(sleep.lm)
-
+```
 ```{r}
 tidy(sleep.lm)
 ```
 
 # Multilevel analysis
+We will use lme4 packages and start with constant model or also known as null model. There will be no explanatory variables. We set the estimation using maximum likelihood estimates(MLE).
+
+The null model will be name as m0. the random effect is due to hospital. 
+
+This is a random intercept with constant-only model.
+
+```{r}
+m0<- lmer(total_score ~ 1 + (1|hospital), data = sleep, REML= FALSE)
+summary(m0)
+```
+The overall mean score (across hospitals) is estimated as 7.15. The mean score for hospital j is estimated as 7.15 + U0j where U0j is the hospital residual.
+
+```{r}
+tidy(m0) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+Adding another level (department) into the model.
+```{r}
+m1<- lmer(total_score ~ 1 + (1|hospital)+ (1|hospital:department),
+          data = sleep, REML = FALSE)
+summary(m1)
+```
+This model consist of random intercepts for each hospital and random intercepts for departments nested within hospital.
 
 # Random intercept model
 
