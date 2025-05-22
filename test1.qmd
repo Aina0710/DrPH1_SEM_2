@@ -115,7 +115,7 @@ sleep %>% ggplot(aes(x=hospital, y= total_score,
 
 # Single level analysis
 
-Single level analysis is used to model a single-level analysis (i.e., no clustering or grouping is accounted for) of the numerical outcome (total_score). This model is also call null model. 
+Single level analysis is used to model a single-level analysis (i.e., no clustering or grouping is accounted for) of the numerical outcome (total_score).  
 
 ```{r}
 sleep.lm<- lm(total_score ~ 1, data = sleep)
