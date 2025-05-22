@@ -13,9 +13,9 @@ format:
 ---
 
 Report prepared by: 
-1. Dr Aina Syazwani bt Aziz 
-2. Dr Nur Shuhaiza bt Supian
-3. Dr Muhammad Aminnudin
+1. Aina Syazwani bt Aziz 
+2. Nur Shuhaiza bt Supian
+3. Muhammad Aminuddin Bin Che Hashim
 
 # Introduction
 
@@ -29,11 +29,33 @@ Multilevel analysis not only improves the precision of estimates by accounting f
 
 # Methodologies
 ## About the Data
-The data comprises 468 participants distributed across two tertiary hospitals in Kelantan. 
+The data comprises 462 participants distributed across two tertiary hospitals in Kelantan. The data was collected for MPH study.
 
 The dataset is structured hierarchically, with individual nurses (Level 1) nested within hospital departments (Level 2), which are further nested within tertiary hospitals (Level 3). Nurses were drawn from multiple departments, including emergency, pediatrics, surgical, and medical wards—each with unique work demands and environmental factors potentially influencing sleep.
 
 The outcome of interest is a continuous sleep score (total_score), which quantitatively measures sleep quality. Explanatory variables include both individual-level characteristics (e.g., age, gender, marital status, position, years of service, work hours, presence of comorbidities) and department- or hospital-level factors (e.g., type of department, institutional policies, shift schedules).
+
+# Variables
+The data consist of several variables. The following are list of variables in the data:
+
+a) id: participants identification
+b) hospital: tertiary hospital (Hospital Universiti Sains Malaysia or Hospital Raja Perempuan Zainab II)
+c) age: participants' age in years (continuous variable)
+d) gender: participants gender (perempuan or lelaki)
+e) race: participant race (Melayu, Cina etc)
+f) status: bujang, berkahwin, bercerai (samaada hidup atau mati)
+g) child: number of participants' child (continuous variable)
+h) education: Degree/Master/PHD, Diploma dengan Post-Basic, Diploma/Kolej, Sijil (SPM/STPM)
+i) position: Jururawat Masyarakat, Jururawat, Penyelia Jururawat, Ketua Jururawat
+j) department: Emergency, Pediatrics, Surgical or Medical
+k) schedule: shift or non-shift
+l) total_service: total years of services (continuos variable)
+m) work_hours: hours of working (continuos variable)
+n) commuting_injury: history of commuting injury (yes/no)
+o) medication_error: history of medication error (yes/no)
+p) comorbid: yes/no
+q) total_score: total score from validated questionnaire (continuos variable)
+r) sleep_quality: poor or good
 
 # Load packages
 
