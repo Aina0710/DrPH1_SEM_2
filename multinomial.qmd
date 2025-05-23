@@ -96,5 +96,31 @@ summary(clean_data$cat_fbs); summary(clean_data$cat_fbs2)
 # recheck releveling
 levels(clean_data$cat_fbs2)
 ```
+# Multinomial analysis
+We will be using VGAM packages to run multinomial logistic regression. The model that we want to estimate for are:
+1. group 1 vs group 3: Diabetes vs Normal
+2. group 2 vs group 3: Prediabetes vs Normal
 
+The reference group here, is Normal group.
+
+## Load the packages
+```{r}
+library(VGAM)
+```
+## Model with univariable
+Gender
+```{r}
+mod1<- vglm(cat_fbs2~ gender, multinomial, data = clean_data)
+summary(mod1)
+```
+Intercept 1: for outcome cat_fbs2 = diabetes vs normal
+Intercept 2: for outcome cat_fbs2 = prediabetes vs normal
+gendermale:1 for outcome cat_fbs 2 = diabetes vs normal
+gendermale:2 for outcome cat_fbs2 = prediabetes vs normal
+
+Age
+```{r}
+mod2<- vglm(cat_fbs2 ~ age, multinomial, data = clean_data)
+summary(mod2)
+```
 
