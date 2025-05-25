@@ -123,4 +123,5 @@ Age
 mod2<- vglm(cat_fbs2 ~ age, multinomial, data = clean_data)
 summary(mod2)
 ```
-
+interpretation
+conclusion
