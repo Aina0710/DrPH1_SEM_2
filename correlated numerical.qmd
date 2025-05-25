@@ -197,6 +197,14 @@ There is more variability in scores between departments within hospitals than be
 
 The work_hours variable is statistically significant (p=0.03), suggesting there is association between work hours with total score. For every 1 additional hour worked, the total score increases by approximately 0.039 points on average, controlling for hospital and department variability.
 
+$$
+\text{total\_score}_{ijk} = 5.1499 + 0.0386\, \text{work\_hours}_{ijk} + u_k + v_{jk} + \varepsilon_{ijk}
+$$
+
+$$
+u_k \sim \mathcal{N}(0, 0.5539^2), \quad v_{jk} \sim \mathcal{N}(0, 1.2106^2), \quad \varepsilon_{ijk} \sim \mathcal{N}(0, 2.9356^2)
+$$
+
 ## Prediction
 
 ## Plot
