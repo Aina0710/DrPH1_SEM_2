@@ -137,7 +137,13 @@ This is a random intercept with constant-only model.
 m0<- lmer(total_score ~ 1 + (1|hospital), data = sleep, REML= FALSE)
 summary(m0)
 ```
-The overall mean score (across hospitals) is estimated as 7.15. The mean score for hospital j is estimated as 7.15 + U0j where U0j is the hospital residual.
+The overall mean score (across hospitals) is estimated as 7.15. The mean score for hospital j is estimated as 7.15 + U0j where U0j is the hospital residual (9.69).
+
+The intra-class correlation (ICC) is 7.15/7.15+9.69 or 42 percent:
+```{r}
+7.15/(7.15+9.69)
+```
+This indicate that 42% of the variance in score can be attributed to the difference between hospitals.
 
 ```{r}
 tidy(m0) %>% 
@@ -152,9 +158,44 @@ summary(m1)
 ```
 This model consist of random intercepts for each hospital and random intercepts for departments nested within hospital.
 
-# Random intercept model
+The ICC for the above model as as follows;
+Total variance for the model: 10.3323
+```{r}
+1.3936+0.2209+8.7178
+```
+The ICC for hospital which tell us the proportion of variance due to differences between hospitals:
+```{r}
+0.2209/10.3323
+```
+The ICC for hospital is 0.021 or 2.1%. This means that about 2.1% of the variance in total score is explained by differences between hospitals.
 
+The ICC for Departments within hospital will tell us the proportion of variance due to differences between departments within hospitals:
+```{r}
+1.3936/10.3323
+```
+The ICC for departments within hospital is 0.135 or 13.5%. Thus, about 13.5% of the score is attributed by the differences between departments within hospitals.
+
+# Random intercept model
 ## Explanatory variable
+We will model the effect of staff-level variable "work_hours" in the model:
+
+$$
+\text{score}_{ij} = \beta_0 + \beta_1 \cdot \text{work\_hours}_{ij} + u_{0j}^{\text{hospital}} + u_{0k(j)}^{\text{department}} + e_{ij}
+$$
+
+```{r}
+ri <- lmer(total_score ~ work_hours + (1|hospital/department), data = sleep, REML = FALSE)
+summary(ri)
+```
+Or
+```{r}
+tidy(ri, conf.int= TRUE) %>% 
+  kbl %>% 
+  kable_styling()
+```
+There is more variability in scores between departments within hospitals than between hospitals themselves.
+
+The work_hours variable is statistically significant (p=0.03), suggesting there is association between work hours with total score. For every 1 additional hour worked, the total score increases by approximately 0.039 points on average, controlling for hospital and department variability.
 
 ## Prediction
 
