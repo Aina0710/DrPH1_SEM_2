@@ -1,0 +1,252 @@
+---
+title: "Correlated numerical"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
+---
+
+Report prepared by: 
+1- Aina Syazwani bt Aziz 
+2- Nur Shuhaiza bt Supian
+3- Muhammad Aminuddin Bin Che Hashim
+
+# Introduction
+
+In healthcare settings, particularly in hospital environments, nurses' well-being and performance are closely linked to their sleep quality. Sleep disturbances among nurses have been associated with reduced job performance, increased risk of errors, and compromised patient safety. To better understand the factors influencing sleep quality, it is important to consider the organizational structure within which nurses operate. Specifically, nurses are nested within clinical departments, which are themselves nested within larger institutional frameworks such as hospitals. This hierarchical structure creates dependencies among observations that violate the assumptions of traditional single-level regression models.
+
+In this study, multilevel modeling is employed to analyze sleep scores among nurses working in two tertiary hospitals: Hospital Universiti Sains Malaysia (HUSM) and Hospital Raja Perempuan Zainab II (HRPZ II). The data exhibit a three-level structure: individual nurses (Level 1) are nested within departments (Level 2), which are in turn nested within hospitals (Level 3). A multilevel modeling approach allows for the partitioning of variance in sleep scores across these levels, enabling a more accurate understanding of both individual and contextual factors that may influence sleep quality.
+
+The primary outcome variable, sleep score, is continuous and reflects the overall sleep quality of each nurse. By incorporating random intercepts at both the department and hospital levels, the model accounts for unobserved heterogeneity that may arise from departmental culture, workload, shift patterns, and institutional policies. Fixed effects can be included to assess how individual characteristics (e.g., age, shift type, workload) and group-level factors (e.g., department type or hospital) impact sleep quality.
+
+Multilevel analysis not only improves the precision of estimates by accounting for clustering but also offers insights into how much of the variability in sleep outcomes is attributable to departments or hospitals. This approach supports more targeted and level-specific interventions to enhance nurse well-being and, by extension, healthcare quality.
+
+# Methodologies
+## About the Data
+The data comprises 462 participants distributed across two tertiary hospitals in Kelantan. The data was collected for MPH study. 
+
+The dataset is structured hierarchically, with individual nurses (Level 1) nested within hospital departments (Level 2), which are further nested within tertiary hospitals (Level 3). Nurses were drawn from multiple departments, including emergency, pediatrics, surgical, and medical wards—each with unique work demands and environmental factors potentially influencing sleep.
+
+The outcome of interest is a continuous sleep score (total_score), which quantitatively measures sleep quality. Explanatory variables include both individual-level characteristics (e.g., age, gender, marital status, position, years of service, work hours, presence of comorbidities) and department- or hospital-level factors (e.g., type of department, institutional policies, shift schedules).
+
+# Variables
+The data consist of several variables. The following are list of variables in the data:
+
+a) id: participants identification
+b) hospital: tertiary hospital (Hospital Universiti Sains Malaysia or Hospital Raja Perempuan Zainab II)
+c) age: participants' age in years (continuous variable)
+d) gender: participants gender (perempuan or lelaki)
+e) race: participant race (Melayu, Cina etc)
+f) status: bujang, berkahwin, bercerai (samaada hidup atau mati)
+g) child: number of participants' child (continuous variable)
+h) education: Degree/Master/PHD, Diploma dengan Post-Basic, Diploma/Kolej, Sijil (SPM/STPM)
+i) position: Jururawat Masyarakat, Jururawat, Penyelia Jururawat, Ketua Jururawat
+j) department: Emergency, Pediatrics, Surgical or Medical
+k) schedule: shift or non-shift
+l) total_service: total years of services (continuos variable)
+m) work_hours: hours of working (continuos variable)
+n) commuting_injury: history of commuting injury (yes/no)
+o) medication_error: history of medication error (yes/no)
+p) comorbid: yes/no
+q) total_score: total score from validated questionnaire (continuos variable)
+r) sleep_quality: poor or good
+
+
+# Load packages
+
+### General packages
+```{r}
+library(tidyverse)
+library(gtsummary)
+library(kableExtra)
+library(plotly)
+library(haven)
+library(broom.mixed)
+library(DT)
+library(readxl)
+```
+
+### Packages for multilevel
+```{r}
+library(lme4)
+library(lmerTest)
+```
+
+# Read data
+```{r}
+sleep <- read_excel("sleep2.xlsx")
+glimpse(sleep)
+```
+
+# Data wrangling
+```{r}
+sleep<-sleep %>% mutate_if(is.character,~ as_factor(.))
+glimpse(sleep)
+```
+# Exploratory Data Analysis
+```{r}
+summary(sleep)
+sleep %>% select(-id) %>% 
+  tbl_summary(
+    statistic = list(all_continuous() ~
+                                 "{mean} ({sd})")) %>% 
+  bold_labels()
+
+```
+
+Plot
+```{r}
+sleep %>% ggplot(aes(x=work_hours, y = total_score)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+
+```{r}
+sleep %>% 
+  ggplot(aes(x = work_hours, y = total_score)) +
+  geom_point(aes(col = department)) +
+  geom_smooth(method = "lm") +
+  facet_grid(~ hospital) +
+  ylab('Total Sleeping Score') +
+  xlab('Working Hours') +
+  labs(color = "Department") +
+  ggtitle('Distribution of Total Sleeping Score Against Working Hours\naccording to Department & Hospital') +
+  theme_bw()
+
+```
+
+# Single level analysis
+
+Single level analysis is used to model a single-level analysis (i.e., no clustering or grouping is accounted for) of the numerical outcome (total_score). 
+
+```{r}
+sleep.lm<- lm(total_score ~ 1, data = sleep)
+summary(sleep.lm)
+```
+```{r}
+tidy(sleep.lm)
+```
+
+# Multilevel analysis
+We will use lme4 packages and start with constant model or also known as null model. There will be no explanatory variables. We set the estimation using maximum likelihood estimates(MLE).
+
+The null model will be name as m0. the random effect is due to hospital. 
+
+This is a random intercept with constant-only model.
+
+```{r}
+m0<- lmer(total_score ~ 1 + (1|hospital:department), data = sleep, REML= FALSE)
+summary(m0)
+```
+
+```{r}
+tidy(m0) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+The average total score across all departments within the hospital is estimated as 6.95. For specific department "j" within hospital is estimated as 6.95 + U0j where U0j represent the variability in total score among different departments within hospital, the differences between the overall average and the specific department's  total score.
+
+The intra-class correlation (ICC) is 1.60/1.60+8.72 or 15.5 percent:
+```{r}
+1.60/(1.60+8.72)
+```
+This indicate that 15.5% of the variance in score can be attributed to the difference between departments in the hospitals.
+
+Comparison with single level model
+```{r}
+mlr <- lm(total_score ~ 1, sleep) #modeling a single intercept 
+logLik(mlr) ; logLik(m0)
+```
+Interpretation: The model with df=3 (m0) has a log-likelihood = -1165.123, which is higher than the model with df=2 (mlr), which has log-likelihood = -1185.422.This suggest that the multilevel model (m0) fit the data better than the single level model (mlr).
+
+# Random intercept model
+## Explanatory variable
+We will model the effect of staff-level variable "work_hours" in the model:
+
+$$
+\text{score}_{ij} = \beta_0 + \beta_1 \cdot \text{work\_hours}_{ij} + u_{0j}^{\text{hospital:department}} + e_{ij}
+$$
+
+```{r}
+ri <- lmer(total_score ~ work_hours + (1|hospital:department), data = sleep, REML = FALSE)
+summary(ri)
+```
+Or
+```{r}
+tidy(ri, conf.int= TRUE) %>% 
+  kbl %>% 
+  kable_styling()
+```
+
+The intercept (average total score when work_hours = 0) is about 5.17. Each additional work hour is associated with an increase of about 0.038 in total score, which is statistically significant (p = 0.032).
+
+The work_hours variable is statistically significant (p=0.03), suggesting there is association between work hours with total score. For every 1 additional hour worked, the total score increases by approximately 0.039 points on average, controlling for department-level variability.
+
+The equation for the average fitted regression line is
+$$
+\text{total\_score}_{ij} = 5.17 + 0.038\,\text{work\_hours}_{ij} + u_j + \epsilon_{ij}
+$$
+Because this is a random intercept model, the intercepts differ, but the slope is fixed at 0.038.
+
+## Prediction
+We can predict the total score based on mixed model for each nurses. The prediction is the average fitted regression plus the hospital and department intercept.
+
+```{r}
+pred_score<- fitted(ri)
+head(pred_score, 10)
+```
+```{r}
+rand_ef <- ranef(ri)
+head(rand_ef$`hospital:department`, 8)
+```
+OR
+```{r}
+ri_fitted<- augment(ri)
+ri_fitted %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>%
+  scroll_box(height = "400px")
+```
+Lets confirm by doing manual calculation.
+The total score for nurses from HUSM: Emergency Department, where;
+
+1. the intercept = 5.17
+2. level-2 residual for HUSM: Emergency department = 1.796
+
+And the fitted value for
+
+1. First observation (work_hours= 45) which is 5.17+1.796+0.038*(45)
+2. For 5th observation (work_hour=48) which is 5.17+1.796+0.038*(48)
+```{r}
+5.17+1.796+0.038*(45)
+```
+```{r}
+5.17+1.796+0.038*(48)
+```
+
+## Plot
+```{r}
+ggplot(ri_fitted, aes(x = work_hours, y = .fitted, group = interaction(hospital, department), color = department)) +
+  geom_point(alpha = 0.3) +
+  geom_line(alpha = 0.3) +
+  ylab("Fitted Total Score") +
+  xlab("Work Hours per Week") +
+  ggtitle("Fitted values from random intercept model\nwith hospital:department grouping") +
+  facet_wrap(~hospital)
+```
+
+# Random slope model
+
+## Model
+
+## Fitted value
+
+# Comparing model (RI vs RS)
+
+# Interpretation
