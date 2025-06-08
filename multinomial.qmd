@@ -220,10 +220,11 @@ ci_mod3 <- confint(mod3)
 cbind(b_mod3, ci_mod3)
 ```
 The following sequences will;
-1. return the log odds and the RRR
-2. return the 95%CI for log odds and the CI for RRR
-3. combine the objects into table
-3. renaming the column
+
+- 1. return the log odds and the RRR
+- 2. return the 95%CI for log odds and the CI for RRR
+- 3. combine the objects into table
+- 4. renaming the column
 
 ```{r}
 b_rrr_mod3 <- cbind(coef(mod3), exp(coef(mod3)))
@@ -324,5 +325,13 @@ exp(-1.29294)/ (1+ exp(-2.13590)+ exp(-1.29294))
 # Probability being in the diabetes group, cat_fbs2 = Diabaetes [1]
 exp(-2.13590)/ (1+ exp(-2.13590)+ exp(-1.29294))
 ```
+# Interpretation
+Using multivariate model with gender and hypertension as independent variables.
+
+```{r}
+mod4 <- vglm(cat_fbs2 ~ gender+ hpt, family = multinomial, data = clean_data)
+summary(mod4)
+```
+The model show how gender and hypertension status influence the likelihood of being in the "Diabetes" or "Prediabetes" groups compared to the "Normal" group.
 
 
