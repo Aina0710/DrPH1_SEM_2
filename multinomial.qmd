@@ -12,10 +12,7 @@ format:
     number-depth: 3
 ---
 
-Report prepared by: 
-1. Aina Syazwani bt Aziz 
-2. Nur Shuhaiza bt Supian
-3. Muhammad Aminuddin Bin Che Hashim
+<img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
 
 # Introduction
 Multinomial logistic regression is a statistical method used to model relationships between a polytomous (i.e., having more than two categories) nominal outcome variable and one or more independent variables. Unlike binary logistic regression, which is limited to dichotomous outcomes, multinomial logistic regression accommodates outcome variables with three or more unordered categories. This method estimates the probability of each category relative to a reference group by fitting a series of binary logistic regressions, producing a set of coefficients that reflect the log-odds of membership in each non-reference category. It is particularly useful in public health and epidemiological research where outcomes such as disease classification, behavioral responses, or clinical stages are categorized without a natural ordering. The model can incorporate both continuous and categorical predictors, enabling comprehensive analysis of complex associations within population health datasets.
@@ -33,29 +30,29 @@ library(haven)
 
 # About the dataset
 This dataset derived from a health or metabolic syndrome screening study. It includes anthropometric, biochemical, and lifestyle variables. The primary outcome of interest for your analysis is fasting blood sugar (fbs).
-
 The dataset consist of the following variables;
-codesub: Participant code or ID.
-age: Age in years (numeric).
-hpt: Hypertension status — “yes” or “no”.
-smoking: Smoking status — e.g., “never smoked”, “still smoking”.
-dmdx: Diabetes diagnosis — “yes” or “no”.
-height: Height in meters (numeric).
-weight: Weight in kilograms (numeric).
-waist: Waist circumference in centimeters (numeric).
-hip: Hip circumference in centimeters (numeric).
-msbpr: Measured systolic blood pressure (numeric).
-mdbpr: Measured diastolic blood pressure (numeric).
-hba1c: Hemoglobin A1c (%) (numeric).
-fbs: Fasting blood sugar in mmol/L — this is the outcome variable.
-mogtt1h: Blood glucose level at 1 hour during OGTT (Oral Glucose Tolerance Test) (mmol/L).
-mogtt2h: Blood glucose level at 2 hours during OGTT (mmol/L).
-totchol: Total cholesterol (mmol/L).
-ftrigliz: Fasting triglycerides (mmol/L).
-hdl: High-density lipoprotein cholesterol (mmol/L).
-ldl: Low-density lipoprotein cholesterol (mmol/L).
-gender: Gender — “male” or “female”.
-crural: Locality — “rural” or possibly “urban”.
+
+- codesub: Participant code or ID.
+- age: Age in years (numeric).
+- hpt: Hypertension status — “yes” or “no”.
+- smoking: Smoking status — e.g., “never smoked”, “still smoking”.
+- dmdx: Diabetes diagnosis — “yes” or “no”.
+- height: Height in meters (numeric).
+- weight: Weight in kilograms (numeric).
+- waist: Waist circumference in centimeters (numeric).
+- hip: Hip circumference in centimeters (numeric).
+- msbpr: Measured systolic blood pressure (numeric).
+- mdbpr: Measured diastolic blood pressure (numeric).
+- hba1c: Hemoglobin A1c (%) (numeric).
+- fbs: Fasting blood sugar in mmol/L — this is the outcome variable.
+- mogtt1h: Blood glucose level at 1 hour during OGTT (Oral Glucose Tolerance Test) (mmol/L).
+- mogtt2h: Blood glucose level at 2 hours during OGTT (mmol/L).
+- totchol: Total cholesterol (mmol/L).
+- ftrigliz: Fasting triglycerides (mmol/L).
+- hdl: High-density lipoprotein cholesterol (mmol/L).
+- ldl: Low-density lipoprotein cholesterol (mmol/L).
+- gender: Gender — “male” or “female”.
+- crural: Locality — “rural” or possibly “urban”.
 
 # Load the dataset
 ```{r}
@@ -83,8 +80,8 @@ summary(clean_data)
 ```{r}
 glimpse(clean_data)
 clean_data %>% select(-codesub) %>% 
-  tbl_summary(by= dmdx,
-              statistic = list(all_continuous()~ "{mean} ({sd})"))
+  tbl_summary(statistic = list(all_continuous()~ "{mean} ({sd})")) %>% 
+  modify_caption("**Table 1:Characteristic of Participant**")
 ```
 ## Categorize fbs into 3 levels
 ```{r}
@@ -118,42 +115,33 @@ summary(clean_data$cat_fbs); summary(clean_data$cat_fbs2)
 # recheck releveling
 levels(clean_data$cat_fbs2)
 ```
-# Multinomial analysis
+# Multinomial analysis using VGAM packages
 We will be using VGAM packages to run multinomial logistic regression. The model that we want to estimate for are:
 1. group 1 vs group 3: Diabetes vs Normal
 2. group 2 vs group 3: Prediabetes vs Normal
 
 The reference group here, is Normal group.
-
-## Load the packages
 ```{r}
 library(VGAM)
 ```
 ## Model with univariable
-###Gender
+### Gender
 ```{r}
 mod1<- vglm(cat_fbs2~ gender, multinomial, data = clean_data)
 summary(mod1)
 ```
-Intercept 1: for outcome cat_fbs2 = diabetes vs normal
-(Intercept):1 = -2.13590
-This value represents the log-odds of being in the Diabetes group rather than the Normal group for individuals in the reference category, which is female.
+Intercept 1: for outcome cat_fbs2 = diabetes vs normal. (Intercept):1 = -2.13590. This value represents the log-odds of being in the Diabetes group rather than the Normal group for individuals in the reference category, which is female.
 The coefficient is statistically significant (p < 0.001), indicating a meaningful difference.
 Since the log-odds value is negative, it suggests that females have a low likelihood of being diabetic compared to having normal fasting blood sugar levels.
 
-Intercept 2: for outcome cat_fbs2 = prediabetes vs normal
-(Intercept):2 = -1.29294
-This coefficient represents the log-odds of being in the Prediabetes group rather than the Normal group for individuals in the reference category, which is female.
-It is statistically significant (p < 0.001), indicating a strong association.
+Intercept 2: for outcome cat_fbs2 = prediabetes vs normal. (Intercept):2 = -1.29294. This coefficient represents the log-odds of being in the Prediabetes group rather than the Normal group for individuals in the reference category, which is female. It is statistically significant (p < 0.001), indicating a strong association.
 The negative value suggests that females have lower odds of being prediabetic compared to having normal fasting blood sugar levels.
 
-gendermale:1 for outcome cat_fbs 2 = diabetes vs normal
-gendermale:1 = 0.07934 (p = 0.53545)
+gendermale:1 for outcome cat_fbs 2 = diabetes vs normal. gendermale:1 = 0.07934 (p = 0.53545).
 This coefficient reflects the change in log-odds of being in the Diabetes group versus the Normal group for males compared to females.
 The result is not statistically significant (p > 0.05), indicating that gender does not have a meaningful association with the likelihood of diabetes compared to normal fasting blood sugar levels in this model.
 
-gendermale:2 for outcome cat_fbs2 = prediabetes vs normal
-This coefficient represents the change in log-odds of being in the Prediabetes group compared to the Normal group for males relative to females.
+gendermale:2 for outcome cat_fbs2 = prediabetes vs normal. This coefficient represents the change in log-odds of being in the Prediabetes group compared to the Normal group for males relative to females. 
 The association is statistically significant, indicating that males are significantly more likely to be prediabetic than females when compared to having normal fasting blood sugar levels.
 
 ```{r}
@@ -161,32 +149,180 @@ exp(0.23841)
 ```
 So, males have 1.27 times the odds of being prediabetic vs normal compared to females.
 
-###Age
+### Age
 ```{r}
 mod2<- vglm(cat_fbs2 ~ age, multinomial, data = clean_data)
 summary(mod2)
 ```
 
-age:1 for outcome cat_fbs 2 = diabetes vs normal 
-age:1          0.030088
+age:1 for outcome cat_fbs 2 = diabetes vs normal. age:1 0.030088.
 Each 1-year increase in age is associated with a 3.1% increase in odds of being diabetic vs normal
 
-age:2 for outcome cat_fbs2 = prediabetes vs normal
-age:2          0.030949
+age:2 for outcome cat_fbs2 = prediabetes vs normal. age:2 0.030949.
 Each 1-year increase in age is associated with a 3.2% increase in odds of being prediabetic vs normal
 
-Age is significantly associated with both diabetes and prediabetes, compared to normal FBS. 
-For each additional year of age:
+Age is significantly associated with both diabetes and prediabetes, compared to normal FBS. For each additional year of age: 
+
 The odds of having diabetes (vs normal FBS) increase by ~3.1%
+
 The odds of having prediabetes (vs normal FBS) increase by ~3.2%
 
 This indicates that older individuals are more likely to have impaired fasting blood sugar.
 
-##Rural vs urban
+## Multivariate Model Analysis
+Adding more variable into the model. We will choose variables as follows:
+- age
+- gender
+- hpt
+
 ```{r}
-mod3<- vglm(cat_fbs2 ~ crural, multinomial, data = clean_data)
+mod3 <-vglm(cat_fbs2~age+gender+hpt, multinomial, data=clean_data)
 summary(mod3)
 ```
-## Inferences
+# Multinomial analysis using NNET package
+Unlike VGAM::vglm function where the reference or the base outcome in the largest group (level), the nnet::multinom usess the smallest group (level) as the references or base outcome.
+
+## Load the packages
+```{r}
+library(nnet)
+```
+## Univariate model
+```{r}
+mlog_nnet<- multinom(cat_fbs ~ age, data= clean_data)
+summary(mlog_nnet)
+```
+## Comparing VGAM::vglm and nnet::multinom
+Changing the reference category
+```{r}
+clean_data <- clean_data %>% 
+  mutate(cat_fbs_relev= relevel(cat_fbs, ref = "Normal"))
+levels(clean_data$cat_fbs_relev)
+```
+So, running multinom will give the following:
+```{r}
+mlog_nnet_relev <- multinom(cat_fbs_relev~ age, data = clean_data)
+summary(mlog_nnet_relev)
+```
+And running vglm, we will get this:
+```{r}
+summary(mod2)
+```
+```{r}
+confint(mod2)
+```
+
+# Inferences
+## Using VGAM 
+Getting the beta coefficient and confidence interval for each covariate in multivariate model (mod3)
+```{r}
+b_mod3 <- coef(mod3)
+ci_mod3 <- confint(mod3)
+cbind(b_mod3, ci_mod3)
+```
+The following sequences will;
+1. return the log odds and the RRR
+2. return the 95%CI for log odds and the CI for RRR
+3. combine the objects into table
+3. renaming the column
+
+```{r}
+b_rrr_mod3 <- cbind(coef(mod3), exp(coef(mod3)))
+ci_b_rrr.mod3 <-cbind(confint(mod3), exp(confint(mod3)))
+res_mod3<- cbind(b_rrr_mod3, ci_b_rrr.mod3)
+colnames(res_mod3)<- c('b','rrr',
+                       'lower 95% b', 'upper 95% b',
+                       'lower 95% rrr', 'upper 95% rrr')
+res_mod3
+```
+A better table using knitr and kableExtra packages
+```{r}
+library(knitr)
+library(kableExtra)
+```
+
+```{r}
+kable(res_mod3, digits = 3) %>% 
+  kable_styling(bootstrap_options = 
+                  c("striped", "hover", "condensed", "responsive"))
+```
+## Using NNET packages 
+## Getting p-value and CI from nnet::multinom
+```{r}
+z.test<- summary(mlog_nnet_relev)$coefficients/summary(mlog_nnet_relev)$standard.errors
+# 2-tailed
+p.val <- (1-pnorm(abs(z.test), 0, 1))*2
+library(readxl)
+colnames(p.val)<- c("p-val intercept", "p-val age")
+p.val
+```
+## CI for nnet::multinom
+```{r}
+confint(mlog_nnet_relev, level = 0.95)
+```
+# Prediction
+## Predict the log odds
+For model 1 (mod1) that use VGAM::vglm function previously
+```{r}
+summary(mod1)
+```
+The predicted log odds for the first 6 observations:
+
+- The predicted log odds for diabetes vs normal group in column 1
+- The predicted log odds for prediabetes vs normal group in column 2
+
+```{r}
+head(predict.vgam(mod1, type = 'link'))
+```
+We can verify these prediction manually. For example the calculation for:
+
+1. the 1st observation log odds
+2. the 4th observation log odds
+
+```{r}
+head(clean_data)[1:4,]
+```
+The value for the
+- 1st observation are gender = female, 0
+- 4th observation are gender = male, 1
+```{r}
+# Patient 1, gender= female (0)
+# Logit cat_fbs2= diabetes[1] vs normal [3]
+-2.13590 + (0.07934*0)
+```
+```{r}
+# Logit cat_fbs2 = prediabetes [2] vs normal [3]
+-1.29294+ (0.23841*0)
+```
+```{r}
+# Patient 4, gender male (1)
+# Logit cat_fbs2 = diabetes [1] vs normal [3]
+-2.13590 + (0.07934*1)
+```
+```{r}
+# Logit cat_fbs2 = prediabetes [2] vs normal [3]
+-1.29294+ (0.23841*1)
+```
+## Predict the probability
+The predicted probability for the first 6 observation
+```{r}
+head(predict.vgam(mod1, type = 'response'))
+```
+Manual calculation for probability. Let us take the first observation where,
+
+1. log odds for group diabetes = -2.13590
+2. log odds for group prediabetes = -1.29294
+
+```{r}
+# Probability being in the reference group, cat_fbs2 = Normal [3]
+1/(1+ exp(-2.13590)+ exp(-1.29294))
+```
+```{r}
+# Probability being in the prediabetes group, cat_fbs2 = Prediabetes [2]
+exp(-1.29294)/ (1+ exp(-2.13590)+ exp(-1.29294))
+```
+```{r}
+# Probability being in the diabetes group, cat_fbs2 = Diabaetes [1]
+exp(-2.13590)/ (1+ exp(-2.13590)+ exp(-1.29294))
+```
 
 
