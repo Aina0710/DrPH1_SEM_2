@@ -130,14 +130,11 @@ The reference group here, is Normal group.
 library(VGAM)
 ```
 ## Model with univariable
-Gender
+###Gender
 ```{r}
 mod1<- vglm(cat_fbs2~ gender, multinomial, data = clean_data)
 summary(mod1)
 ```
-{r}
-table(clean_data$cat_fbs2, clean_data$gender)
-
 Intercept 1: for outcome cat_fbs2 = diabetes vs normal
 (Intercept):1 = -2.13590
 This value represents the log-odds of being in the Diabetes group rather than the Normal group for individuals in the reference category, which is female.
@@ -159,15 +156,17 @@ gendermale:2 for outcome cat_fbs2 = prediabetes vs normal
 This coefficient represents the change in log-odds of being in the Prediabetes group compared to the Normal group for males relative to females.
 The association is statistically significant, indicating that males are significantly more likely to be prediabetic than females when compared to having normal fasting blood sugar levels.
 
-{r}
+```{r}
 exp(0.23841)
+```
 So, males have 1.27 times the odds of being prediabetic vs normal compared to females.
 
-Age
+###Age
 ```{r}
 mod2<- vglm(cat_fbs2 ~ age, multinomial, data = clean_data)
 summary(mod2)
 ```
+
 age:1 for outcome cat_fbs 2 = diabetes vs normal 
 age:1          0.030088
 Each 1-year increase in age is associated with a 3.1% increase in odds of being diabetic vs normal
@@ -182,5 +181,12 @@ The odds of having diabetes (vs normal FBS) increase by ~3.1%
 The odds of having prediabetes (vs normal FBS) increase by ~3.2%
 
 This indicates that older individuals are more likely to have impaired fasting blood sugar.
-interpretation
-conclusion
+
+##Rural vs urban
+```{r}
+mod3<- vglm(cat_fbs2 ~ crural, multinomial, data = clean_data)
+summary(mod3)
+```
+## Inferences
+
+
