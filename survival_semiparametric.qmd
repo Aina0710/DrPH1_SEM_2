@@ -1,0 +1,80 @@
+---
+title: "Survival semiparametric"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
+---
+
+Report prepared by: 1. Aina Syazwani bt Aziz 2. Nur Shuhaiza bt Supian 3. Muhammad Aminuddin Bin Che Hashim ---
+
+# Introduction
+
+# Load packages
+
+## General packages
+
+```{r}
+library(tidyverse)
+library(broom)
+library(gtsummary)
+library(broom)
+library(psych)
+library(corrplot)
+library(tidyr)
+library(survival)
+library(survminer)
+```
+
+# About the dataset
+
+The dataset consist of the following variables;
+
+# Load the dataset
+
+```{r}
+library(haven)
+stroke_fatality <- read_dta("stroke_fatality.dta")
+View(stroke_fatality)
+summary(stroke_fatality)
+```
+
+# Data wrangling
+
+Change character variable to factor
+
+```{r}
+stroke_fatality <- stroke_fatality %>% mutate_if(is.labelled, ~as_factor(.))
+glimpse(stroke_fatality)
+
+```
+
+# Exploratory Data Analysis
+
+```{r}
+summary(stroke_fatality)
+```
+
+There are several data missing in the variable. Hence, we need to handle these missing data prior to continuing with analysis.
+
+## Handling missing data
+
+In this practice, we remove any row with missing data.
+
+```{r}
+clean_data <- na.omit(data)
+summary(clean_data)
+```
+
+```{r}
+glimpse(clean_data)
+clean_data %>% select(-codesub) %>% 
+  tbl_summary(by= dmdx,
+              statistic = list(all_continuous()~ "{mean} ({sd})"))
+```
