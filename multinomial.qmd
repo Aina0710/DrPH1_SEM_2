@@ -171,6 +171,7 @@ This indicates that older individuals are more likely to have impaired fasting b
 
 ## Multivariate Model Analysis
 Adding more variable into the model. We will choose variables as follows:
+
 - age
 - gender
 - hpt
@@ -213,7 +214,7 @@ confint(mod2)
 
 # Inferences
 ## Using VGAM 
-Getting the beta coefficient and confidence interval for each covariate in multivariate model (mod3)
+### Getting the beta coefficient and confidence interval for each covariate in multivariate model (mod3)
 ```{r}
 b_mod3 <- coef(mod3)
 ci_mod3 <- confint(mod3)
@@ -247,7 +248,7 @@ kable(res_mod3, digits = 3) %>%
                   c("striped", "hover", "condensed", "responsive"))
 ```
 ## Using NNET packages 
-## Getting p-value and CI from nnet::multinom
+### Getting p-value and CI from nnet::multinom
 ```{r}
 z.test<- summary(mlog_nnet_relev)$coefficients/summary(mlog_nnet_relev)$standard.errors
 # 2-tailed
@@ -256,7 +257,7 @@ library(readxl)
 colnames(p.val)<- c("p-val intercept", "p-val age")
 p.val
 ```
-## CI for nnet::multinom
+### CI for nnet::multinom
 ```{r}
 confint(mlog_nnet_relev, level = 0.95)
 ```
@@ -280,7 +281,12 @@ We can verify these prediction manually. For example the calculation for:
 2. the 4th observation log odds
 
 ```{r}
-head(clean_data)[1:4,]
+clean_data %>%
+  head(20) %>%  # Show only first 20 rows (adjust as needed)
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  scroll_box(width = "100%", height = "300px")
+
 ```
 The value for the
 - 1st observation are gender = female, 0
@@ -326,12 +332,12 @@ exp(-1.29294)/ (1+ exp(-2.13590)+ exp(-1.29294))
 exp(-2.13590)/ (1+ exp(-2.13590)+ exp(-1.29294))
 ```
 # Interpretation
-Using multivariate model with gender and hypertension as independent variables.
+Using multivariate model with age, gender and hypertension as independent variables.
 
 ```{r}
-mod4 <- vglm(cat_fbs2 ~ gender+ hpt, family = multinomial, data = clean_data)
+mod4 <- vglm(cat_fbs2 ~ age+gender+ hpt, family = multinomial, data = clean_data)
 summary(mod4)
 ```
-The model show how gender and hypertension status influence the likelihood of being in the "Diabetes" or "Prediabetes" groups compared to the "Normal" group.
+
 
 
