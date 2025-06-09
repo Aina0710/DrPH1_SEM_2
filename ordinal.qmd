@@ -1,0 +1,100 @@
+---
+title: "Ordinal Outcomes"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
+---
+<img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
+
+# Introduction
+
+
+
+# Load packages
+## General packages
+```{r}
+library(tidyverse)
+library(broom)
+library(gtsummary)
+library(broom)
+library(kableExtra)
+library(haven)
+```
+
+# About the dataset
+This dataset derived from a health or metabolic syndrome screening study. It includes anthropometric, biochemical, and lifestyle variables. The primary outcome of interest for your analysis is fasting blood sugar (fbs).
+The dataset consist of the following variables;
+
+- codesub: Participant code or ID.
+- age: Age in years (numeric).
+- hpt: Hypertension status — “yes” or “no”.
+- smoking: Smoking status — e.g., “never smoked”, “still smoking”.
+- dmdx: Diabetes diagnosis — “yes” or “no”.
+- height: Height in meters (numeric).
+- weight: Weight in kilograms (numeric).
+- waist: Waist circumference in centimeters (numeric).
+- hip: Hip circumference in centimeters (numeric).
+- msbpr: Measured systolic blood pressure (numeric).
+- mdbpr: Measured diastolic blood pressure (numeric).
+- hba1c: Hemoglobin A1c (%) (numeric).
+- fbs: Fasting blood sugar in mmol/L — this is the outcome variable.
+- mogtt1h: Blood glucose level at 1 hour during OGTT (Oral Glucose Tolerance Test) (mmol/L).
+- mogtt2h: Blood glucose level at 2 hours during OGTT (mmol/L).
+- totchol: Total cholesterol (mmol/L).
+- ftrigliz: Fasting triglycerides (mmol/L).
+- hdl: High-density lipoprotein cholesterol (mmol/L).
+- ldl: Low-density lipoprotein cholesterol (mmol/L).
+- gender: Gender — “male” or “female”.
+- crural: Locality — “rural” or possibly “urban”.
+
+# Load the dataset
+```{r}
+data<- read_csv("datamssm_a.csv")
+glimpse(data)
+```
+# Data wrangling
+Change character variable to factor
+```{r}
+data<- data %>% mutate_if(is.character, ~as_factor(.))
+glimpse(data)
+```
+# Exploratory Data Analysis
+```{r}
+summary(data)
+```
+There are several data missing in the variable. Hence, we need to handle these missing data prior to continuing with analysis.
+
+## Handling missing data
+In this practice, we remove any row with missing data. 
+```{r}
+clean_data <- na.omit(data)
+summary(clean_data)
+```
+```{r}
+glimpse(clean_data)
+clean_data %>% select(-codesub) %>% 
+  tbl_summary(statistic = list(all_continuous()~ "{mean} ({sd})")) %>% 
+  modify_caption("**Table 1:Characteristic of Participant**")
+```
+## Categorize fbs into 3 levels
+```{r}
+# Categorize FBS based on Malaysian clinical cut-offs into ordinal
+clean_data <- clean_data %>%
+  mutate(cat_fbs = case_when(
+    fbs < 5.6 ~ "Low",
+    fbs >= 5.6 & fbs <= 6.9 ~ "Moderate",
+    TRUE ~ "High")) %>%
+  mutate(cat_fbs = factor(cat_fbs, levels = c("Low", "Moderate", "High")))
+
+#check cat_fbs 
+glimpse(clean_data$cat_fbs)
+levels(clean_data$cat_fbs)
+```
+
