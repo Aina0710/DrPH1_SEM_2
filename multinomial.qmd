@@ -338,6 +338,6 @@ Using multivariate model with age, gender and hypertension as independent variab
 mod4 <- vglm(cat_fbs2 ~ age+gender+ hpt, family = multinomial, data = clean_data)
 summary(mod4)
 ```
-
+fff
 
 
