@@ -1,0 +1,382 @@
+---
+title: "Assignment Survival Parametric"
+author: "Amin Aina Shu"
+format: html
+editor: visual
+---
+
+## Prepare Environment
+
+```{r}
+# Install required packages (only once)
+install.packages(c("readxl", "dplyr", "survival", "survminer"))
+
+# Load libraries
+library(readxl)      # to read Excel
+library(dplyr)       # data manipulation
+library(survival)    # survival analysis core
+library(survminer)   # for beautiful survival plots
+
+```
+
+## Load Dataset
+
+```{r}
+# Read the Excel file
+data1 <- read_excel("Drugs_trials_dataset.xlsx")
+
+# View first few rows
+head(data1)
+```
+
+## Review the dataset
+
+```{r}
+# Overview
+str(data1)
+
+# Basic summary
+summary(data1)
+
+# Table breakdowns for each categorical variable
+table(data1$Gender)
+table(data1$Treatment)
+table(data1$Comorbidity)
+table(data1$Status)
+
+```
+
+The dataset contains 100 individuals with time-to-event data. The variables include:
+
+-    **Age** (range 40–80),
+
+-    **Gender** (Male/Female),
+
+-    **Treatment** (Control, DrugA, DrugB),
+
+-    **Comorbidity status** (None, Mild, Severe),
+
+-    **Time** in days (until event or censoring),
+
+-    **Status** (1 = event, 0 = censored).
+
+## Survival Object
+
+```{r}
+# Create survival object
+surv_obj <- Surv(time = data1$Time, event = data1$Status)
+
+# View object
+head(surv_obj)
+
+data.frame(time = surv_obj[, "time"], status = surv_obj[, "status"])[1:10, ]
+
+```
+
+## Kaplan-Meier analysis (non-parametric)
+
+```{r}
+library(survminer)
+
+# Fit Kaplan-Meier
+km_fit <- survfit(surv_obj ~ Treatment, data = data1)
+
+# Plot KM curve
+ggsurvplot(
+  km_fit,
+  data = data1,
+  pval = TRUE,
+  conf.int = TRUE,
+  risk.table = TRUE,
+  xlab = "Days",
+  ylab = "Survival Probability",
+  legend.title = "Treatment Group",
+  legend.labs = c("Control", "DrugA", "DrugB"),
+  palette = c("#E69F00", "#56B4E9", "#009E73"),  # Better contrast
+  censor.shape = 124,       # Adds marks for censored data
+  censor.size = 3,
+  risk.table.height = 0.35, # Adjusts height of risk table
+  risk.table.fontsize = 2,
+  surv.plot.height = 0.75,
+  font.x = c(12, "bold"),
+  font.y = c(12, "bold"),
+  font.tickslab = 10,
+  legend = "bottom",        # Move legend to bottom
+  ggtheme = theme_minimal() # Clean minimal theme
+)
+
+```
+
+The Kaplan-Meier survival analysis showed no statistically significant difference in survival between the Control, DrugA, and DrugB groups (log-rank test p = 0.82). The survival curves overlapped substantially, suggesting that neither DrugA nor DrugB significantly altered the time to event when compared to control.
+
+## Cox proportional hazard analysis (semi-parametric)
+
+```{r}
+# Fit the model with multiple covariates
+cox_fit <- coxph(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity, data = data1)
+
+# Display the results
+summary(cox_fit)
+
+```
+
+## Tidy up the Output for interpretation
+
+```{r}
+install.packages(c("broom", "gt", "dplyr", "kableExtra"))
+library(broom)
+library(gt)
+library(dplyr)
+library(kableExtra)
+
+cox_table <- tidy(cox_fit, exponentiate = TRUE, conf.int = TRUE)
+
+cox_table %>%
+  select(term, estimate, conf.low, conf.high, p.value) %>%
+  mutate(across(where(is.numeric), ~round(., 3))) %>%
+  rename(
+    Variable = term,
+    HR = estimate,
+    `95% CI Lower` = conf.low,
+    `95% CI Upper` = conf.high,
+    `p-value` = p.value
+  ) %>%
+  kable("html", caption = "Cox Proportional Hazards Model Results") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+In a Cox proportional hazards model adjusting for age, gender, treatment type, and comorbidity status, **only severe comorbidity** was significantly associated with increased hazard of the event (HR = 3.51, 95% CI: 1.95–6.32, p \< 0.001). Patients with severe comorbidities had more than three times the hazard of experiencing the event compared to those with mild comorbidities. Other variables, including age, gender, and treatment groups, did not show statistically significant associations with hazard.
+
+## Checking Proportional Hazard assumption
+
+```{r}
+ph_test <- cox.zph(cox_fit)
+print(ph_test)
+
+plot(ph_test)
+
+library(survminer)
+
+ggsurvplot(survfit(cox_fit), data = data1,
+           conf.int = TRUE,
+           xlab = "Days", ylab = "Adjusted Survival Probability",
+           legend.title = "Risk Groups",
+           ggtheme = theme_minimal())
+```
+
+The proportional hazards (PH) assumption was assessed using Schoenfeld residuals. Both the global and individual tests showed no significant violation (p \> 0.05), and visual inspection of residual plots revealed no strong deviation from linearity. Thus, the PH assumption was considered met.
+
+## Parametric analysis
+
+### a) Exponential model
+
+```{r}
+# Model
+exp_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
+                   data = data1, dist = "exponential")
+
+summary(exp_fit)
+
+library(broom)
+library(dplyr)
+library(kableExtra)
+
+# Tidy the survreg model output
+exp_tbl <- tidy(exp_fit) %>%
+  mutate(
+    `Time Ratio` = exp(estimate),
+    `CI Lower` = exp(estimate - 1.96 * std.error),
+    `CI Upper` = exp(estimate + 1.96 * std.error),
+    `p-value` = 2 * (1 - pnorm(abs(estimate / std.error)))
+  ) %>%
+  select(term, estimate, `Time Ratio`, `CI Lower`, `CI Upper`, `p-value`) %>%
+  rename(
+    Coefficient = estimate,
+    Variable = term
+  ) %>%
+  mutate(across(where(is.numeric), ~round(., 4)))
+
+exp_tbl %>%
+  kable("html", caption = "Exponential Parametric Survival Model: Time Ratios") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+The exponential parametric survival model revealed that only **severe comorbidity** was significantly associated with reduced survival time (TR = 0.32, 95% CI 0.1860, 0.5551, p \< 0.001).
+
+Other covariates including age, gender, and treatment type did not show statistically significant associations with survival.
+
+The overall model was statistically significant (Likelihood Ratio Test p = 0.0083), indicating that the included covariates improved prediction of survival time compared to the null model.
+
+### b) Weibull Model
+
+```{r}
+weibull_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
+                       data = data1, dist = "weibull")
+summary(weibull_fit)
+
+# Shape Parameter (Hazard trend)
+# Log(scale) = -0.0554
+scale <- exp(-0.0554)
+Shape <-  1 / scale
+print(Shape)
+
+# Tidy and calculate time ratios
+weibull_tbl <- tidy(weibull_fit) %>%
+  mutate(
+    `Time Ratio` = exp(estimate),
+    `CI Lower` = exp(estimate - 1.96 * std.error),
+    `CI Upper` = exp(estimate + 1.96 * std.error),
+    `p-value` = 2 * (1 - pnorm(abs(estimate / std.error)))
+  ) %>%
+  select(term, estimate, `Time Ratio`, `CI Lower`, `CI Upper`, `p-value`) %>%
+  rename(
+    Coefficient = estimate,
+    Variable = term
+  ) %>%
+  mutate(across(where(is.numeric), round, digits = 4))
+
+weibull_tbl %>%
+  kable("html", caption = "Weibull Parametric Survival Model: Time Ratios") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+A Weibull parametric survival model was fitted to assess predictors of time to event. The model assumes an Accelerated Failure Time (AFT) structure with a shape parameter of approximately **1.06**, suggesting a **slightly increasing hazard over time**.
+
+After adjustment, only **severe comorbidity** was significantly associated with survival time (**Time Ratio = 0.33, 95% CI: 0.19–0.55, p \< 0.001**), indicating a 67% reduction in expected survival time compared to those with mild comorbidities.
+
+Age, gender, and treatment type were not statistically significant predictors. These findings align with the results from the exponential model but with more flexibility in hazard assumption.
+
+### c) Log-normal model
+
+```{r}
+lognormal_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
+                         data = data1, dist = "lognormal")
+summary(lognormal_fit)
+
+# Tidy and compute Time Ratios
+lognormal_tbl <- tidy(lognormal_fit) %>%
+  mutate(
+    `Time Ratio` = exp(estimate),
+    `CI Lower` = exp(estimate - 1.96 * std.error),
+    `CI Upper` = exp(estimate + 1.96 * std.error),
+    `p-value` = 2 * (1 - pnorm(abs(estimate / std.error)))
+  ) %>%
+  select(term, estimate, `Time Ratio`, `CI Lower`, `CI Upper`, `p-value`) %>%
+  rename(
+    Coefficient = estimate,
+    Variable = term
+  ) %>%
+  mutate(across(where(is.numeric), round, 4))
+
+lognormal_tbl %>%
+  kable("html", caption = "Log-normal Parametric Survival Model: Time Ratios") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+The log-normal parametric survival model assumes a right-skewed distribution of survival times.
+
+The model revealed that only **severe comorbidity** was significantly associated with shorter survival time (**TR = 0.26, 95% CI: 0.13–0.51, p \< 0.001**), indicating a 74% reduction in survival time compared to mild comorbidity.
+
+Other factors such as age, gender, and treatment type did not significantly influence survival.
+
+The model assumes a right-skewed survival distribution with a scale parameter of 1.25, indicating moderate dispersion.
+
+### d) Log-logistic model
+
+```{r}
+loglogistic_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
+                           data = data1, dist = "loglogistic")
+
+summary(loglogistic_fit)
+
+loglogistic_tbl <- tidy(loglogistic_fit) %>%
+  mutate(
+    `Time Ratio` = exp(estimate),
+    `CI Lower` = exp(estimate - 1.96 * std.error),
+    `CI Upper` = exp(estimate + 1.96 * std.error),
+    `p-value` = 2 * (1 - pnorm(abs(estimate / std.error)))
+  ) %>%
+  select(term, estimate, `Time Ratio`, `CI Lower`, `CI Upper`, `p-value`) %>%
+  rename(
+    Coefficient = estimate,
+    Variable = term
+  ) %>%
+  mutate(across(where(is.numeric), round, 4))
+
+loglogistic_tbl %>%
+  kable("html", caption = "Log-logistic Parametric Survival Model: Time Ratios") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+A log-logistic parametric survival model was used to assess factors affecting survival time. The model assumes a non-monotonic hazard pattern (initial rise then fall) and estimated a scale parameter of 0.71.
+
+After adjusting for covariates, **severe comorbidity** was significantly associated with reduced survival (TR = 0.25, 95% CI: 0.13–0.49, p \< 0.001), suggesting a 75% reduction in median survival time compared to mild comorbidity.
+
+Age, gender, and treatment groups were not statistically significant predictors.
+
+## Compare models
+
+### a) AIC comparison
+
+```{r}
+AIC(exp_fit, weibull_fit, lognormal_fit, loglogistic_fit)
+```
+
+Model performance was evaluated using Akaike Information Criterion (AIC).
+
+The **exponential model** had the lowest AIC (1222.57), indicating the best overall model fit with the least complexity.
+
+However, although the exponential model yielded the lowest AIC value (1222.57), indicating the most parsimonious fit, it assumes a constant hazard rate over time, in which it is an assumption that is often unrealistic in real-world clinical or public health scenarios.
+
+In contrast, the Weibull model, which had only a slightly higher AIC (1224.15), allows for time-varying hazards, accommodating both increasing and decreasing risk patterns over time.
+
+The estimated shape parameter in the Weibull model was approximately 1.06, suggesting a modest increase in hazard as time progresses, in which it is a pattern that more aligned with the expected natural course of chronic diseases or progressive conditions.
+
+Therefore, despite the marginal AIC difference, the Weibull model was selected as the preferred model for interpretation and reporting due to its better alignment with real-world hazard behavior and its flexibility in survival analysis contexts.
+
+### b) Compare with Cox model
+
+```{r}
+coxph(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity, data = data1)
+```
+
+The Cox proportional hazards model provided a statistically significant overall fit (Likelihood Ratio Test = 19.08, p = 0.004), identifying **severe comorbidity** as a strong independent predictor of hazard (HR = 3.51, p \< 0.001).
+
+This result was **consistent across all parametric models** (exponential, Weibull, log-normal, and log-logistic), which also identified severe comorbidity as the only significant predictor of reduced survival time. However, as mentioned before in AIC model comparison, Weibull model is selected as final model.
+
+So, to emphasize, the similarity in covariate effects between the Cox model and the Weibull model supports the validity of the parametric model assumptions.
+
+Given its interpretability, predictive capacity, and better reflection of real-world hazard trends, the **Weibull model was selected as the preferred model** for reporting and estimating survival times, while the Cox model served as a valuable semi-parametric benchmark.
+
+## Plotting final model
+
+```{r}
+
+library(flexsurv)
+fit <- flexsurvreg(Surv(Time, Status) ~ Gender, data = data1, dist = "weibull")
+plot(fit, xlab = "Days", ylab = "Survival Probability")
+```
+
+The plot overlays the non-parametric Kaplan-Meier survival curve (black) with the fitted Weibull parametric survival curve (red). The red curve closely follows the black curve, particularly in the early and middle portions of the survival timeline, suggesting a **good fit** of the Weibull model to the observed survival data.
+
+The fitted curve also provides smoother survival estimates and slightly more optimistic predictions beyond 1000 days, where the KM curve becomes less stable due to fewer individuals at risk (as seen from the widening confidence intervals). The alignment between both curves supports the **validity of the Weibull model assumptions** and its suitability for predicting survival times.
+
+## Prediction with the final model
+
+```{r}
+predict(weibull_fit, 
+        newdata = data.frame(
+          Age = 60, 
+          Gender = "Female", 
+          Treatment = "DrugB", 
+          Comorbidity = "Severe"
+        ), 
+        type = "quantile", p = 0.5)
+
+```
+
+Based on the final Weibull model, the estimated **median survival time** for a new data, which is a 60-year-old **female patient**, treated with **DrugB**, and having **severe comorbidity**, is **approximately 93.4 days**.
+
+This prediction represents the time point by which **50% of similar patients** are expected to have experienced the event (e.g., death, relapse), under the model assumptions.
+
+The estimate accounts for the time-varying hazard structure modeled by the Weibull distribution and reflects the **substantially reduced survival associated with severe comorbidity**, as observed across all survival models in the analysis.
