@@ -104,12 +104,11 @@ clean_datao <- clean_datao %>%
     fbs >= 5.6 & fbs <= 6.9 ~ "Moderate",
     TRUE ~ "High")) %>%
   mutate(cat_fbs = factor(cat_fbs, levels = c("Low", "Moderate", "High")))
-
-#check cat_fbs 
+#check cat_fbs
 glimpse(clean_datao$cat_fbs)
 levels(clean_datao$cat_fbs)
 ```
-#Analysis by estimation using ordinal package
+# Analysis by estimation using ordinal package
 Now, we will estimate the model using the proportional odds model or cumulative link model.
 In ordinal package, we can use the function clm() to run the maximum likelihood estimates
 In this assignment, we will use the following independent variable:
@@ -131,7 +130,7 @@ tidy(ord1, exponentiate = TRUE)
 1. Being a male associated with higher categories of FBS level. Males have 1.20 times higher odds of being in a higher outcome category compared to females
 2. Absence of hypertension associated with lower categories of FBS level. Those without hypertension have 0.44 times the odds (i.e., 56% lower odds) of being in a higher outcome category compared to those with hypertension.
 
-#Inferences
+# Inferences
 ```{r}
 tidy(ord1, exponentiate = TRUE, conf.int = TRUE)
 ```
@@ -140,7 +139,7 @@ Interpretation:
 
 2. Not having hypertension (compared to having hypertension) is significantly associated with lower odds of being in a higher outcome category. Specifically, those without hypertension have 0.44 times the odds (95% CI: 0.35–0.55, p < 0.001) of being in a higher category compared to those with hypertension, indicating a 56% reduction in the odds of being in a higher outcome category.
 
-#Prediction
+# Prediction
 ```{r}
 new.data <- clean_datao
 predfbs <- predict(ord1, newdata = new.data)
@@ -159,7 +158,7 @@ All 20 observations were predicted to be in the “Low” category.
 No observations were predicted to be in the Moderate or High categories.
 
 
-#Checking proportional odds assumption
+# Checking proportional odds assumption
 
 ```{r}
 nominal_test(ord1)
