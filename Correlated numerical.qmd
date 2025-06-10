@@ -1,0 +1,523 @@
+---
+title: "Multilevel Correlated Numerical Outcome"
+format:  
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
+---
+<img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
+
+# Introduction
+In many research settings, data are structured hierarchically—such as students nested within schools, patients within hospitals, or repeated measurements within individuals. In such contexts, numerical outcomes (e.g., test scores, blood pressure, income) often exhibit correlation within clusters or levels due to shared characteristics or influences. Standard regression methods that assume independence of observations are inadequate for these data, as they can lead to biased estimates and incorrect inference.
+
+To address this, multilevel (hierarchical) modeling—also known as mixed-effects modeling—provides a robust analytical framework. These models explicitly account for the nested structure by incorporating random effects, which capture the variability at different levels (e.g., individual and group levels). The correlation among outcomes within clusters is modeled using random intercepts and/or slopes, allowing for more accurate estimation of fixed effects and improved predictive performance.
+
+# About the dataset
+Dataset is students from 10 handpicked schools, representing a subset of students and schools from a US survey of eight-grade students at 1000 schools (800 public 200 private).
+
+There are quite a lot of variables in the dataset, but we will only be using these three variables for our model:
+
+- homework: time spent on math homework each week (Level 1)
+- math: score in a math test 
+- schnum: school group id (Level 2)
+
+You can get the dataset from this link <https://stats.oarc.ucla.edu/other/examples/imm/>
+
+# Load packages
+## General packages
+```{r}
+library(tidyverse)
+library(gtsummary)
+library(kableExtra)
+library(plotly)
+library(haven)
+library(broom.mixed)
+library(DT)
+```
+## Packages for multilevel
+```{r}
+library(lme4)
+library(lmerTest)
+```
+# Read data
+```{r}
+math <- read_sav("imm10-1.sav")
+glimpse(math)
+```
+# Data wrangling
+Change variables into factors
+```{r}
+math<- math %>% mutate(sex2 = factor(SEX, labels = c('male', 'female')),
+                       race2 = factor(WHITE, labels = c("Non-White", "White")),
+                       public2 = factor(PUBLIC, labels = c("non-public", "public")))
+glimpse(math)
+```
+
+# Exploratory Data Analysis
+```{r}
+summary(math)
+math %>% select(-SCHID, -STUID, -SES, -MEANSES, -RACE, -PUBLIC,
+                -RATIO, -PERCMIN, -WHITE, -SEX, -SCSIZE, -SCTYPE, -CSTR, -URBAN,
+                -REGION, -PARENTED) %>% 
+  tbl_summary(label = list(sex2 ~"Sex",
+                           race2 ~"Race",
+                           public2 ~"Type of school"),
+              type= list(where(is.logical)~"categorical")) %>% 
+  modify_caption("**Table 1.Characteristic of Respondent**") %>% 
+  modify_header(label ~"**Characteristic**") %>% 
+  bold_labels()
+
+```
+
+Plot
+```{r}
+math %>%
+  ggplot(aes(x = HOMEWORK, y = MATH, 
+             col = sex2, group = sex2)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+```{r}
+math %>%
+  ggplot(aes(x = HOMEWORK, y = MATH))+
+  geom_point() +
+  geom_smooth(method = lm)
+```
+
+```{r}
+math %>% 
+ ggplot(aes(x =HOMEWORK , y = MATH, 
+             col = SCHNUM, group = public2)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  facet_grid(~ public2) +
+  ylab('Math Score') +
+  xlab('Time spent on homework (hours)') +
+  labs(color = "Type of School") +
+  ggtitle('Distribution of Math Score According to Time Spent on \n Math Homework Each Week and Type of School') +
+  theme_bw()
+```
+# Comparing groups using multilevel model
+
+Start with null model (simplest model)
+$$
+\text{score}_{ij} = \beta_0 + u_{0j} + e_{ij}
+$$
+
+- scoreij = the math score of student i in school j
+
+- β0 = the overall mean score across school
+
+- u0j = the effect of school j on score. This is also level-2 residuals
+
+- eij = time spent on math homework (individual level residual). This is level-1 residuals
+ 
+## Single level analysis
+
+We use linear regression as we assume that the outcome is normally distributed.
+```{r}
+math.lm<- lm(MATH ~ 1, data = math)
+summary(math.lm)
+```
+```{r}
+tidy(math.lm)
+```
+
+## Multilevel analysis
+We will use lme4 packages and start with constant model or also known as null model. There will be no explanatory variables. We set the estimation using maximum likelihood estimates(MLE).
+
+The null model will be name as m0. The random effect is due schools. 
+
+This is a random intercept with constant-only model.
+```{r}
+m0<- lmer(MATH ~ 1 + (1|SCHNUM), data = math, REML= FALSE)
+summary(m0)
+```
+Random effect summarise the variabce and standard deviation of each random effect. The total number of observations is 260 along with numbers of groups for each higher level in the model, which is school id (10 groups).
+
+The overall mean across schools is estimated as 48.87. The mean for school j is estimated as 48.87 + U^0j where U^0j is the school residuals (level-2 residuals).
+
+The intraclass correlation (ICC) is 30.54/(30.54+72.24) or 29.7%
+```{r}
+30.54/(30.54+72.24)
+```
+For more pleasant table, use tidy and kableExtra functions
+```{r}
+tidy(m0) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+Comparison between linear regression vs multilevel regression (math.lm vs m0)
+```{r}
+logLik(math.lm); logLik(m0)
+```
+The likelihood ratio test formula as follows:
+$$
+\text{LRT} = -2 \left[ \log L_{\text{math.lm}} - \log L_{\text{m0}} \right]
+= 2 \left[ \log L_{\text{m0}} - \log L_{\text{math.lm}} \right]
+$$
+Hence, LRT = -2*[-995.0621-(-937.3896)], equal to 115.345.
+```{r}
+-2*(-995.0621-(-937.3896))
+```
+The LRT result indicates that more complex model (m0) provides a significantly better fit to data compare to simpler model (math.lm).
+
+There are 2 variance:
+
+- level-1 variance (homework) = 72.24
+- level-2 variance (school) = 30.54
+
+Hence, the 30.54/(30.54+72.24)= 0.297. This indicate that 29.7% of the variance in the math score can be attributed to differences between schools.
+
+# Random intercept model (RI)
+
+## Adding and explanatory variable
+
+We will model the student-level variable which is time spent in hours for math homework (homework) in the model.
+
+$$
+\text{score}_{ij} = \beta_0 + \beta_1homework_{ij} +u_{0j} + e_{ij}
+$$
+```{r}
+ri <- lmer(MATH~ HOMEWORK + (1|SCHNUM),
+           data = math,
+           REML = FALSE)
+summary(ri)
+```
+Or
+```{r}
+tidy(ri) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+The equation for the average fitted regression line (across school) is:
+$$
+\text{score}_{ij} = 44.98 + 2.21 \cdot \text{homework}_{ij} + u_{0j} + \varepsilon_{ij}
+$$
+
+Because this is a random intercept model, the intercepts differ. But, the slope is fixed at 2.21 for homework.
+
+## Prediction
+
+We can predict the score attainment based on the mixed model for each student. The prediction is the average fitted regression (average score) plus the school’s intercept.
+
+This is equal to the average fitted regression line plus the relevant school’s intercept.
+```{r}
+pred_score <- fitted(ri)
+head(pred_score, 10)
+```
+
+There will be 10 random effect because there were 10 group of schools. And the random effects (due to random intercepts) due to school are
+```{r}
+rand_ef <- ranef(ri)
+head(rand_ef$SCHNUM, 10)
+```
+
+Or you may Use broom.mixed::augment() function to get the fitted values
+```{r}
+ri_fitted <- augment(ri)
+ri_fitted %>% 
+  kbl() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+Let us confirm this by doing manual calculation.
+
+The score attainment for students from SCHNUM = 1, where;
+
+- the intercept = 44.98
+
+- level-2 residual (school level residual) = -2.064
+
+And the fitted values for
+
+- The 1st observation (homework = 1) which is 44.98 + (-2.064) + (2.21*1)
+
+- The 7th observation (homework = 5) which is 44.98 + (-2.064) + (2.21*5)
+
+```{r}
+44.98 + (-2.064) + (2.21*1)
+```
+```{r}
+44.98 + (-2.064) + (2.21*5)
+```
+```{r}
+ri_fitted %>% 
+  kbl() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+Meanwhile, the average score attainment for student from SCHNUM = 2, where;
+
+- the intercept = 44.98
+
+- the level-2 residual (school residual) = -7.029
+
+And the fitted value for
+
+- The 24th observation, (homework = 2) which is 44.98 + (-7.029) + (2.21*2)
+- The 31st observation, (homework = 4) which is 44.98 + (-7.029) + (2.21*4)
+
+```{r}
+44.98 + (-7.029) + (2.21*2)
+```
+```{r}
+44.98 + (-7.029) + (2.21*4)
+```
+## Plot
+```{r}
+ggplot(ri_fitted, aes(x = HOMEWORK, y = .fitted, group = SCHNUM, color = as.factor(SCHNUM))) +
+  geom_point(alpha = 0.6) +
+  geom_line(alpha = 0.6) +
+  ylab('Fitted score attainment') +
+  xlab('Time spent in hours on math homework') +
+  ggtitle('Fitted values from random intercept model with covariate: homework') +
+  theme_bw() +
+  scale_color_brewer(palette = "Set3", name = "School Number")
+```
+## Variance
+### Between school variance
+
+Note that in; 
+
+- the constant only model (m0), the variance is 30.54. 
+
+- then the variance reduce after adding homework where model with homewrok as the explanatory variable now has the variance of 22.50.
+
+- After accounting for homework effects, the proportion of unexplained variance that is due to differences between schools decrease slightly to 22.50/ (22.50+64.26) = 0.2593 or 25.93%.
+
+### Within school variance
+
+Also note that;
+
+- constant only model (m0) variance is 72.24
+
+- reduction of variance after adding homework
+
+- model with homework as the explanatory variance, have variance of 64.26.
+
+With addition of homework has reduce the amount of variance at both the school and the student level.
+
+The between-school variance has reduce from 30.54 to 22.50, and the within-school variance has reduced from 72.24 to 64.26. The decrease in within-school variance is expected because homework is a student or individual level variable.
+
+# Random slope model (RS)
+
+This model will allow different slopes. In the previous random intercept model (ri), we assumed that the slope of regression line is fixed across schools.  
+
+Now, we will extend the random intercept model fitted before to allow both the intercept and the slope to vary randomly across schools.
+
+## Model
+
+$$
+\text{score}_{ij} = \beta_0 + \beta_1homework_{ij} + u_{0j} + u_{1j}homework_{ij} + e_{ij}
+$$
+
+```{r}
+rs <- lmer(MATH ~ HOMEWORK + (1 + HOMEWORK | SCHNUM), 
+           data = math, REML = FALSE)
+summary(rs)
+```
+Or
+```{r}
+tidy(rs) %>% 
+  kbl() %>% 
+  kable_styling()
+```
+## Fitted values
+
+The fitted (average) score attainment based on the random slope model is
+```{r}
+rs_res <- augment(rs)
+rs_res %>% 
+  kbl() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  scroll_box(width = "100%", height = "300px")
+```
+The average effect of homework across all schools is 2.049, meaning that for an average school, one extra unit of homework (hours) is associated with an increase of 2.049 points in math score. However, this effect is not statistically significant (p = 0.195), so we cannot conclude there's a consistent effect across all schools.
+
+The intercept variance of 61.81 is interpreted as the between-school variance in average math scores when homework = 0.
+
+The intercept–slope correlation is estimated as −0.80, indicating that schools with higher average math scores (higher intercepts) tend to have a weaker or more negative homework effect (flatter slopes).This means that schools with higher average math scores usually show a smaller effect of homework on scores. In other words, in schools where students already do well, spending more time on homework doesn't help as much compared to schools with lower average scores.
+
+By defining random intercepts and slopes together, we allow the homework effect and baseline achievement to covary, capturing the joint variation across schools.
+
+## Comparing model between random intercept and random slope
+```{r}
+anova(ri, rs)
+```
+There is strong evidence that time spent on math homework effect differs across schools.
+
+## Interpretation of random effect across school
+
+The homework effect for school j is estimated as 2.049+u₁j, and the between-school variance in these slopes is estimated as 19.98.
+
+For the average school, we predict an increase of 2.049 points in the math score for each additional hour spent on math homework.
+
+The 95% coverage interval for school slope is $2.049 \pm 1.96 \sqrt{19.98}= -6.71, 10.81$ 
+
+So, the middle 95% of schools are estimated to have a homework effect between –6.71 and 10.81 points.
+
+## Prediction from random slope
+
+```{r}
+ra.eff.rs <- ranef(rs, condVar = TRUE)
+datatable(ra.eff.rs$SCHNUM)
+```
+
+## Plot of random effect
+School slope vs school intercept u0j and u1j
+```{r}
+plot(ra.eff.rs)
+```
+```{r}
+ra.eff.rs.sc <- ra.eff.rs$SCHNUM 
+names(ra.eff.rs.sc)
+```
+or using ggplot
+```{r}
+ra.eff.rs.sc <- ra.eff.rs.sc %>%
+  rename(rs_slope = HOMEWORK, rs_int = "(Intercept)")
+
+ra.eff.rs.sc %>% 
+ggplot(aes( x = rs_int, y = rs_slope)) + 
+  geom_point() +
+  geom_vline(xintercept = 0) + 
+  geom_hline(yintercept = 0)
+```
+## Model equation
+$$
+\text score_{ij} = (44.773 + u_{0j}) + (2.049 + u_{1j})homework_{ij} 
+$$
+
+## Plot fitted values from random slope
+```{r}
+datatable(rs_res)
+```
+```{r}
+library(ggplot2)
+library(dplyr)
+
+rs_res %>%
+  ggplot(aes(x = HOMEWORK, y = .fitted, group = factor(SCHNUM), color = factor(SCHNUM))) +
+  geom_point(alpha = 0.4, size = 2) +
+  geom_line(size = 0.5) +
+  scale_color_brewer(palette = "Paired", name = "School") +
+  labs(
+    y = "Fitted math score",
+    x = "Time spent on math homework (hours)",
+    title = "Fitted score attainment for each school \nfrom the random slope model"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    axis.title = element_text(size = 12),
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10)
+  )
+
+```
+## Adding a level-1 variable to the random slope
+### Random slope for sex
+
+Start with a model that assumes sex has a fixed effect
+$$
+\text score_{ij} = \beta_0 + \beta_1homework_{ij} + \beta_2sex_{ij}+ u_{0j} + u_{1j}homework_{ij} + e_{ij} 
+$$
+```{r}
+rs_sex <- lmer(MATH ~ HOMEWORK + sex2 + (1+HOMEWORK| SCHNUM),
+               data = math, REML = FALSE)
+summary(rs_sex)
+```
+Now, assuming sex has random slope
+$$
+\text score_{ij} = \beta_0 + \beta_1homework_{ij} + \beta_2sex_{ij}+ u_{0j} + u_{1j}homework_{ij} + u_{2j}sex+ e_{ij} 
+$$
+```{r}
+rs_sex_sl <- lmer(MATH ~ HOMEWORK + sex2 + 
+                     (1 + HOMEWORK + sex2 | SCHNUM),
+                data = math, REML = FALSE)
+summary(rs_sex_sl)
+```
+Comparison between random slope mode for homework and random slope model for homework and sex. 
+
+Does a random slope model with both sex and homework differ from a random slope model with only homework?
+```{r}
+anova(rs_sex, rs_sex_sl)
+```
+There is no significant improvement in model fit when allowing the slope of sex to vary across schools. 
+
+Therefore, we revert to a model with a fixed coefficient for sex.
+
+## Adding level-2 explanatory variable in the random slope model
+
+Let us assume that although we found evidence that the effect of parents education (PARENTED) on attainment differs across schools, we will work with a simpler model by removing the random coefficients on the parent education variables. So parent education comes in as a fixed effect in the model.
+
+```{r}
+rs_sex_parented <- lmer(MATH ~ HOMEWORK + sex2 + factor(PARENTED) +
+                     (1 + HOMEWORK | SCHNUM), data = math,
+                     REML = FALSE)
+summary(rs_sex_parented)
+```
+## Interaction in the random slope
+### Cross-level interaction
+```{r}
+m.int <- lmer(MATH ~ HOMEWORK + sex2 + factor(PARENTED) + 
+                race2 + HOMEWORK:race2 + 
+                (1 + HOMEWORK | SCHNUM), data = math,
+              REML = FALSE)
+summary(m.int)
+```
+From the model,
+
+- Parental education level is a significant predictor of student math achievement.
+
+- Homework has a positive but non-significant effect, and its impact varies widely by school.
+
+- No significant differences in MATH scores by sex or race, nor any significant interaction between race and homework.
+
+## Checking assumptions
+```{r}
+res.rs.sex.sl <- augment(rs_sex_sl)
+datatable(res.rs.sex.sl)
+```
+### Plot random effect
+Plot 1
+```{r}
+library(merTools)
+```
+```{r}
+re.rs.sex.sl <- REsim(rs_sex_sl)
+plotREsim(re.rs.sex.sl)
+```
+Plot 2
+
+Using lattice
+
+```{r}
+library(lattice)
+randoms <- ranef(rs_sex_sl, condVar = TRUE)
+dotplot(randoms)
+```
+
+Fitted vs residuals
+```{r}
+plot(rs_sex_sl)
+```
+
+Normally distributed
+```{r}
+library(lattice)
+qqmath(rs_sex_sl)
+```
+# Github link
+<https://github.com/Aina0710/DrPH1_SEM_2>
