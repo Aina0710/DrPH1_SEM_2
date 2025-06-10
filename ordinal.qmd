@@ -88,10 +88,8 @@ glimpse(clean_datao)
 ```
 
 ```{r}
-clean_datao %>% 
-  tbl_summary(
-    statistic = list(all_continuous() ~ "{mean} ({sd})")
-  ) %>%
+clean_datao %>% select(-codesub) %>% 
+  tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})")) %>%
   modify_caption("**Table 1: Characteristic of Participant**")
 ```
 
@@ -128,6 +126,7 @@ tidy(ord1, exponentiate = TRUE)
 ```
 
 1. Being a male associated with higher categories of FBS level. Males have 1.20 times higher odds of being in a higher outcome category compared to females
+
 2. Absence of hypertension associated with lower categories of FBS level. Those without hypertension have 0.44 times the odds (i.e., 56% lower odds) of being in a higher outcome category compared to those with hypertension.
 
 # Inferences
@@ -135,6 +134,7 @@ tidy(ord1, exponentiate = TRUE)
 tidy(ord1, exponentiate = TRUE, conf.int = TRUE)
 ```
 Interpretation:
+
 1. Being male (compared to female) is significantly associated with higher odds of being in a higher category of the ordinal outcome. Specifically, males have approximately 1.20 times higher odds (95% CI: 1.04–1.40, p = 0.015) of being in a higher outcome category.
 
 2. Not having hypertension (compared to having hypertension) is significantly associated with lower odds of being in a higher outcome category. Specifically, those without hypertension have 0.44 times the odds (95% CI: 0.35–0.55, p < 0.001) of being in a higher category compared to those with hypertension, indicating a 56% reduction in the odds of being in a higher outcome category.
@@ -146,17 +146,21 @@ predfbs <- predict(ord1, newdata = new.data)
 head(predfbs$fit, 10)
 ```
 For the first observation, there is:
-A 55% probability of being in the Low category.
-A 30% probability of being in the Moderate category.
-A 15% probability of being in the High category.
+
+- A 55% probability of being in the Low category.
+
+- A 30% probability of being in the Moderate category.
+
+- A 15% probability of being in the High category.
 
 ```{r}
 classfbs <- predict(ord1, type = 'class')
 head(classfbs$fit,20)
 ```
-All 20 observations were predicted to be in the “Low” category.
-No observations were predicted to be in the Moderate or High categories.
 
+All 20 observations were predicted to be in the “Low” category.
+
+No observations were predicted to be in the Moderate or High categories.
 
 # Checking proportional odds assumption
 
