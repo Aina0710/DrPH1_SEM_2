@@ -14,8 +14,7 @@ format:
 <img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
 
 # Introduction
-
-
+Ordinal logistic regression is a statistical modeling technique used to analyze data with an ordinal outcome variable, where the categories have a natural ordering (such as "low", "medium", and "high"). Unlike nominal logistic regression, which is designed for unordered categories, ordinal logistic regression accounts for the ordered nature of the dependent variable and estimates the odds of an observation falling at or below each category based on one or more independent variables. It is particularly useful in studies examining attitudes, perceptions, or clinical outcomes with graded severity, and it provides insights into how predictor variables influence the likelihood of moving up or down the ordinal scale.
 
 # Load packages
 ## General packages
@@ -26,6 +25,12 @@ library(gtsummary)
 library(broom)
 library(kableExtra)
 library(haven)
+library(dplyr)
+```
+
+## Ordinal package
+```{r}
+library(ordinal)
 ```
 
 # About the dataset
@@ -56,37 +61,44 @@ The dataset consist of the following variables;
 
 # Load the dataset
 ```{r}
-data<- read_csv("datamssm_a.csv")
-glimpse(data)
+datao<- read_csv("datamssm_a.csv")
+glimpse(datao)
 ```
 # Data wrangling
 Change character variable to factor
 ```{r}
-data<- data %>% mutate_if(is.character, ~as_factor(.))
-glimpse(data)
+datao<- datao %>% mutate_if(is.character, ~as_factor(.))
+glimpse(datao)
 ```
 # Exploratory Data Analysis
 ```{r}
-summary(data)
+summary(datao)
 ```
 There are several data missing in the variable. Hence, we need to handle these missing data prior to continuing with analysis.
 
 ## Handling missing data
 In this practice, we remove any row with missing data. 
 ```{r}
-clean_data <- na.omit(data)
-summary(clean_data)
+clean_datao <- na.omit(datao)
+summary(clean_datao)
 ```
+
 ```{r}
-glimpse(clean_data)
-clean_data %>% select(-codesub) %>% 
-  tbl_summary(statistic = list(all_continuous()~ "{mean} ({sd})")) %>% 
-  modify_caption("**Table 1:Characteristic of Participant**")
+glimpse(clean_datao)
 ```
+
+```{r}
+clean_datao %>% 
+  tbl_summary(
+    statistic = list(all_continuous() ~ "{mean} ({sd})")
+  ) %>%
+  modify_caption("**Table 1: Characteristic of Participant**")
+```
+
 ## Categorize fbs into 3 levels
 ```{r}
 # Categorize FBS based on Malaysian clinical cut-offs into ordinal
-clean_data <- clean_data %>%
+clean_datao <- clean_datao %>%
   mutate(cat_fbs = case_when(
     fbs < 5.6 ~ "Low",
     fbs >= 5.6 & fbs <= 6.9 ~ "Moderate",
@@ -94,7 +106,64 @@ clean_data <- clean_data %>%
   mutate(cat_fbs = factor(cat_fbs, levels = c("Low", "Moderate", "High")))
 
 #check cat_fbs 
-glimpse(clean_data$cat_fbs)
-levels(clean_data$cat_fbs)
+glimpse(clean_datao$cat_fbs)
+levels(clean_datao$cat_fbs)
 ```
+#Analysis by estimation using ordinal package
+Now, we will estimate the model using the proportional odds model or cumulative link model.
+In ordinal package, we can use the function clm() to run the maximum likelihood estimates
+In this assignment, we will use the following independent variable:
+- gender (female and male)
+- hypertension (yes and no)
+
+```{r}
+ord1 <- clm(cat_fbs ~ gender + hpt, data = clean_datao)
+summary(ord1)
+```
+```{r}
+tidy(ord1)
+```
+
+```{r}
+tidy(ord1, exponentiate = TRUE)
+```
+
+1. Being a male associated with higher categories of FBS level. Males have 1.20 times higher odds of being in a higher outcome category compared to females
+2. Absence of hypertension associated with lower categories of FBS level. Those without hypertension have 0.44 times the odds (i.e., 56% lower odds) of being in a higher outcome category compared to those with hypertension.
+
+#Inferences
+```{r}
+tidy(ord1, exponentiate = TRUE, conf.int = TRUE)
+```
+Interpretation:
+1. Being male (compared to female) is significantly associated with higher odds of being in a higher category of the ordinal outcome. Specifically, males have approximately 1.20 times higher odds (95% CI: 1.04–1.40, p = 0.015) of being in a higher outcome category.
+
+2. Not having hypertension (compared to having hypertension) is significantly associated with lower odds of being in a higher outcome category. Specifically, those without hypertension have 0.44 times the odds (95% CI: 0.35–0.55, p < 0.001) of being in a higher category compared to those with hypertension, indicating a 56% reduction in the odds of being in a higher outcome category.
+
+#Prediction
+```{r}
+new.data <- clean_datao
+predfbs <- predict(ord1, newdata = new.data)
+head(predfbs$fit, 10)
+```
+For the first observation, there is:
+A 55% probability of being in the Low category.
+A 30% probability of being in the Moderate category.
+A 15% probability of being in the High category.
+
+```{r}
+classfbs <- predict(ord1, type = 'class')
+head(classfbs$fit,20)
+```
+All 20 observations were predicted to be in the “Low” category.
+No observations were predicted to be in the Moderate or High categories.
+
+
+#Checking proportional odds assumption
+
+```{r}
+nominal_test(ord1)
+```
+
+
 
