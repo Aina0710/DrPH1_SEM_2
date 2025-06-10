@@ -1,16 +1,21 @@
 ---
-title: "Assignment Survival Parametric"
-author: "Amin Aina Shu"
-format: html
-editor: visual
+title: "Survival Parametric"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
 ---
+<img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
 
-## Prepare Environment
+# Prepare Environment
 
 ```{r}
-# Install required packages (only once)
-install.packages(c("readxl", "dplyr", "survival", "survminer"))
-
 # Load libraries
 library(readxl)      # to read Excel
 library(dplyr)       # data manipulation
@@ -19,7 +24,7 @@ library(survminer)   # for beautiful survival plots
 
 ```
 
-## Load Dataset
+# Load Dataset
 
 ```{r}
 # Read the Excel file
@@ -29,7 +34,7 @@ data1 <- read_excel("Drugs_trials_dataset.xlsx")
 head(data1)
 ```
 
-## Review the dataset
+# Review the dataset
 
 ```{r}
 # Overview
@@ -46,21 +51,23 @@ table(data1$Status)
 
 ```
 
+# About the dataset
+
 The dataset contains 100 individuals with time-to-event data. The variables include:
 
--    **Age** (range 40–80),
+-   **Age** (range 40–80),
 
--    **Gender** (Male/Female),
+-   **Gender** (Male/Female),
 
--    **Treatment** (Control, DrugA, DrugB),
+-   **Treatment** (Control, DrugA, DrugB),
 
--    **Comorbidity status** (None, Mild, Severe),
+-   **Comorbidity status** (None, Mild, Severe),
 
--    **Time** in days (until event or censoring),
+-   **Time** in days (until event or censoring),
 
--    **Status** (1 = event, 0 = censored).
+-   **Status** (1 = event, 0 = censored).
 
-## Survival Object
+# Survival Object
 
 ```{r}
 # Create survival object
@@ -73,7 +80,7 @@ data.frame(time = surv_obj[, "time"], status = surv_obj[, "status"])[1:10, ]
 
 ```
 
-## Kaplan-Meier analysis (non-parametric)
+# Kaplan-Meier analysis (non-parametric)
 
 ```{r}
 library(survminer)
@@ -109,7 +116,7 @@ ggsurvplot(
 
 The Kaplan-Meier survival analysis showed no statistically significant difference in survival between the Control, DrugA, and DrugB groups (log-rank test p = 0.82). The survival curves overlapped substantially, suggesting that neither DrugA nor DrugB significantly altered the time to event when compared to control.
 
-## Cox proportional hazard analysis (semi-parametric)
+# Cox proportional hazard analysis (semi-parametric)
 
 ```{r}
 # Fit the model with multiple covariates
@@ -123,7 +130,6 @@ summary(cox_fit)
 ## Tidy up the Output for interpretation
 
 ```{r}
-install.packages(c("broom", "gt", "dplyr", "kableExtra"))
 library(broom)
 library(gt)
 library(dplyr)
@@ -166,9 +172,9 @@ ggsurvplot(survfit(cox_fit), data = data1,
 
 The proportional hazards (PH) assumption was assessed using Schoenfeld residuals. Both the global and individual tests showed no significant violation (p \> 0.05), and visual inspection of residual plots revealed no strong deviation from linearity. Thus, the PH assumption was considered met.
 
-## Parametric analysis
+# Parametric analysis
 
-### a) Exponential model
+## Exponential model
 
 ```{r}
 # Model
@@ -207,7 +213,7 @@ Other covariates including age, gender, and treatment type did not show statisti
 
 The overall model was statistically significant (Likelihood Ratio Test p = 0.0083), indicating that the included covariates improved prediction of survival time compared to the null model.
 
-### b) Weibull Model
+## Weibull Model
 
 ```{r}
 weibull_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
@@ -246,7 +252,7 @@ After adjustment, only **severe comorbidity** was significantly associated with 
 
 Age, gender, and treatment type were not statistically significant predictors. These findings align with the results from the exponential model but with more flexibility in hazard assumption.
 
-### c) Log-normal model
+## Log-normal model
 
 ```{r}
 lognormal_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
@@ -281,7 +287,7 @@ Other factors such as age, gender, and treatment type did not significantly infl
 
 The model assumes a right-skewed survival distribution with a scale parameter of 1.25, indicating moderate dispersion.
 
-### d) Log-logistic model
+## Log-logistic model
 
 ```{r}
 loglogistic_fit <- survreg(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity,
@@ -314,9 +320,9 @@ After adjusting for covariates, **severe comorbidity** was significantly associa
 
 Age, gender, and treatment groups were not statistically significant predictors.
 
-## Compare models
+# Compare models
 
-### a) AIC comparison
+## AIC comparison
 
 ```{r}
 AIC(exp_fit, weibull_fit, lognormal_fit, loglogistic_fit)
@@ -334,7 +340,7 @@ The estimated shape parameter in the Weibull model was approximately 1.06, sugge
 
 Therefore, despite the marginal AIC difference, the Weibull model was selected as the preferred model for interpretation and reporting due to its better alignment with real-world hazard behavior and its flexibility in survival analysis contexts.
 
-### b) Compare with Cox model
+## Compare with Cox model
 
 ```{r}
 coxph(Surv(Time, Status) ~ Age + Gender + Treatment + Comorbidity, data = data1)
@@ -348,10 +354,9 @@ So, to emphasize, the similarity in covariate effects between the Cox model and 
 
 Given its interpretability, predictive capacity, and better reflection of real-world hazard trends, the **Weibull model was selected as the preferred model** for reporting and estimating survival times, while the Cox model served as a valuable semi-parametric benchmark.
 
-## Plotting final model
+# Plotting final model
 
 ```{r}
-
 library(flexsurv)
 fit <- flexsurvreg(Surv(Time, Status) ~ Gender, data = data1, dist = "weibull")
 plot(fit, xlab = "Days", ylab = "Survival Probability")
@@ -361,7 +366,7 @@ The plot overlays the non-parametric Kaplan-Meier survival curve (black) with th
 
 The fitted curve also provides smoother survival estimates and slightly more optimistic predictions beyond 1000 days, where the KM curve becomes less stable due to fewer individuals at risk (as seen from the widening confidence intervals). The alignment between both curves supports the **validity of the Weibull model assumptions** and its suitability for predicting survival times.
 
-## Prediction with the final model
+# Prediction with the final model
 
 ```{r}
 predict(weibull_fit, 
@@ -380,3 +385,6 @@ Based on the final Weibull model, the estimated **median survival time** for a n
 This prediction represents the time point by which **50% of similar patients** are expected to have experienced the event (e.g., death, relapse), under the model assumptions.
 
 The estimate accounts for the time-varying hazard structure modeled by the Weibull distribution and reflects the **substantially reduced survival associated with severe comorbidity**, as observed across all survival models in the analysis.
+
+# Github link
+<https://github.com/Aina0710/DrPH1_SEM_2>
