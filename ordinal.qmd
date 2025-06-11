@@ -25,12 +25,6 @@ library(gtsummary)
 library(broom)
 library(kableExtra)
 library(haven)
-library(dplyr)
-```
-
-## Ordinal package
-```{r}
-library(ordinal)
 ```
 
 # About the dataset
@@ -106,7 +100,12 @@ clean_datao <- clean_datao %>%
 glimpse(clean_datao$cat_fbs)
 levels(clean_datao$cat_fbs)
 ```
-# Analysis by estimation using ordinal package
+# Analysis by estimation 
+## Using ordinal package
+```{r}
+library(ordinal)
+```
+
 Now, we will estimate the model using the proportional odds model or cumulative link model.
 In ordinal package, we can use the function clm() to run the maximum likelihood estimates
 In this assignment, we will use the following independent variable:
@@ -129,7 +128,20 @@ tidy(ord1, exponentiate = TRUE)
 
 2. Absence of hypertension associated with lower categories of FBS level. Those without hypertension have 0.44 times the odds (i.e., 56% lower odds) of being in a higher outcome category compared to those with hypertension.
 
+##Using MASS package
+```{r}
+library(MASS)
+```
+
+```{r}
+ord2 <- MASS::polr(cat_fbs ~ gender + hpt, data = clean_datao)
+summary(ord2)
+
+```
+By using both ordinal and MASS package, the estimates value are the same
+
 # Inferences
+##Using ordinal package
 ```{r}
 tidy(ord1, exponentiate = TRUE, conf.int = TRUE)
 ```
@@ -140,17 +152,16 @@ Interpretation:
 2. Not having hypertension (compared to having hypertension) is significantly associated with lower odds of being in a higher outcome category. Specifically, those without hypertension have 0.44 times the odds (95% CI: 0.35–0.55, p < 0.001) of being in a higher category compared to those with hypertension, indicating a 56% reduction in the odds of being in a higher outcome category.
 
 # Prediction
+
+##Using ordinal package
 ```{r}
-new.data <- clean_datao
-predfbs <- predict(ord1, newdata = new.data)
-head(predfbs$fit, 10)
+new.datao <- clean_datao %>% select(-cat_fbs)  # if dataset is clean_datao and column exists
+predfbs <- predict(ord1, newdata = new.datao)
+head(predfbs$fit)
 ```
 For the first observation, there is:
-
 - A 55% probability of being in the Low category.
-
 - A 30% probability of being in the Moderate category.
-
 - A 15% probability of being in the High category.
 
 ```{r}
@@ -158,15 +169,17 @@ classfbs <- predict(ord1, type = 'class')
 head(classfbs$fit,20)
 ```
 
-All 20 observations were predicted to be in the “Low” category.
+-All 20 observations were predicted to be in the “Low” category.
+-No observations were predicted to be in the Moderate or High categories.
 
-No observations were predicted to be in the Moderate or High categories.
-
-# Checking proportional odds assumption
-
+##Using MASS package
 ```{r}
-nominal_test(ord1)
+prob_polr <- predict(ord2, type = 'probs')
+head(prob_polr)
 ```
-
+For the first observation, there is:
+- A 55% probability of being in the Low category.
+- A 30% probability of being in the Moderate category.
+- A 15% probability of being in the High category.
 
 
