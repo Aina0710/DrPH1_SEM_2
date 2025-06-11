@@ -382,13 +382,20 @@ Using multivariate model with age, gender and hypertension as independent variab
 mod4 <- vglm(cat_fbs2 ~ age+gender+ hpt, family = multinomial, data = clean_data)
 summary(mod4)
 ```
-1.Age
+
+1. Age
+
 For each one-year increase in age, the odds of being diabetic (vs. normal) increase by about 2.8% (OR ≈ 1.03, p < 0.001). Similarly, each year of age increases the odds of being prediabetic (vs. normal) by about 2.8% (OR ≈ 1.03, p < 0.001). This shows that age is a significant factor that increases the risk of abnormal fasting blood sugar levels.
 
 2. Gender (Male vs. Female)
+
 There is no significant difference between males and females in the odds of being diabetic (p = 0.625). However, males have significantly higher odds of being prediabetic compared to females (OR ≈ 1.25, p = 0.011), suggesting that men are more likely to be prediabetic.
 
 3. Hypertension (No vs. Yes)
+
 Individuals without hypertension have significantly lower odds of being diabetic (vs. normal), with an odds ratio of about 0.60 (p = 0.0086). They also have lower odds of being prediabetic (OR ≈ 0.53, p < 0.001). This suggests that not having hypertension is associated with a lower risk of abnormal fasting blood sugar levels.
 
 Overall, these findings highlight that age and hypertension status are important predictors of fasting blood sugar categories, with gender playing a role in prediabetes risk.
+
+# Github link
+<https://github.com/Aina0710/DrPH1_SEM_2/tree/main>
