@@ -117,6 +117,7 @@ levels(clean_data$cat_fbs2)
 ```
 # Multinomial analysis using VGAM packages
 We will be using VGAM packages to run multinomial logistic regression. The model that we want to estimate for are:
+
 1. group 1 vs group 3: Diabetes vs Normal
 2. group 2 vs group 3: Prediabetes vs Normal
 
@@ -130,20 +131,19 @@ library(VGAM)
 mod1<- vglm(cat_fbs2~ gender, multinomial, data = clean_data)
 summary(mod1)
 ```
-Intercept 1: for outcome cat_fbs2 = diabetes vs normal. (Intercept):1 = -2.13590. This value represents the log-odds of being in the Diabetes group rather than the Normal group for individuals in the reference category, which is female.
-The coefficient is statistically significant (p < 0.001), indicating a meaningful difference.
-Since the log-odds value is negative, it suggests that females have a low likelihood of being diabetic compared to having normal fasting blood sugar levels.
+Intercept 1: 
+The log-odds of being diabetic versus normal for females (reference category) is -2.13590, which is statistically significant (p < 0.001). This negative value indicates that females are less likely to be diabetic compared to having normal fasting blood sugar levels.
 
-Intercept 2: for outcome cat_fbs2 = prediabetes vs normal. (Intercept):2 = -1.29294. This coefficient represents the log-odds of being in the Prediabetes group rather than the Normal group for individuals in the reference category, which is female. It is statistically significant (p < 0.001), indicating a strong association.
-The negative value suggests that females have lower odds of being prediabetic compared to having normal fasting blood sugar levels.
+Intercept 2: 
+The log-odds of being prediabetic versus normal for females (reference category) is -1.29294, which is significant (p < 0.001). This negative value indicates that females are less likely to be prediabetic than to have normal fasting blood sugar levels.
 
-gendermale:1 for outcome cat_fbs 2 = diabetes vs normal. gendermale:1 = 0.07934 (p = 0.53545).
-This coefficient reflects the change in log-odds of being in the Diabetes group versus the Normal group for males compared to females.
-The result is not statistically significant (p > 0.05), indicating that gender does not have a meaningful association with the likelihood of diabetes compared to normal fasting blood sugar levels in this model.
+gendermale:1: 
+For diabetes vs. normal, the log-odds for males is 0.07934 (p = 0.535), indicating no significant difference between genders for the likelihood of diabetes in this model.
 
-gendermale:2 for outcome cat_fbs2 = prediabetes vs normal. This coefficient represents the change in log-odds of being in the Prediabetes group compared to the Normal group for males relative to females. 
-The association is statistically significant, indicating that males are significantly more likely to be prediabetic than females when compared to having normal fasting blood sugar levels.
+gendermale:2: 
+For prediabetes vs. normal, males have a significantly higher log-odds 0.23841  (p < 0.001) of being prediabetic than females, suggesting that men are more likely to be prediabetic compared to having normal fasting blood sugar levels.
 
+To get odd ratio:
 ```{r}
 exp(0.23841)
 ```
@@ -169,6 +169,36 @@ The odds of having prediabetes (vs normal FBS) increase by ~3.2%
 
 This indicates that older individuals are more likely to have impaired fasting blood sugar.
 
+### Hypertension
+```{r}
+mod_hpt<- vglm(cat_fbs2 ~ hpt, multinomial, data = clean_data)
+summary(mod_hpt)
+```
+Intercept 1: 
+The log-odds of being diabetic vs normal for those with hypertension (reference category) is -1.3802, which is statistically significant (p < 0.001). This negative value indicates that individuals with hypertension are less likely to be diabetic compared to having normal fasting blood sugar levels.
+
+Intercept 2: 
+The log-odds of being prediabetic versus normal for those with hypertension is -0.3753, also statistically significant (p = 0.0022). This negative value suggests that those with hypertension are less likely to be prediabetic than to have normal fasting blood sugar levels.
+
+hptno:1: 
+For diabetes vs. normal, the log-odds for individuals without hypertension is -0.8068 (p < 0.001), indicating that those without hypertension have significantly lower odds of being diabetic compared to those with hypertension.
+
+hptno:2: 
+For prediabetes vs. normal, individuals without hypertension have a significantly lower log-odds of -0.9280 (p < 0.001) of being prediabetic compared to those with hypertension, suggesting that not having hypertension is associated with a reduced likelihood of being prediabetic.
+
+To get odd ratio:
+For diabetes vs normal
+```{r}
+exp(-0.8068)
+```
+Those without hypertension have significantly lower log-odds of being in the Diabetes group (vs. Normal). OR = exp(-0.8068) ≈ 0.45, meaning 55% lower odds.
+
+For prediabetes vs normal
+```{r}
+exp(-0.9280)
+```
+Those without hypertension have significantly lower log-odds of being in the Prediabetes group (vs. Normal). OR = exp(-0.9280) ≈ 0.40, meaning 60% lower odds.
+
 ## Multivariate Model Analysis
 Adding more variable into the model. We will choose variables as follows:
 
@@ -188,6 +218,8 @@ Unlike VGAM::vglm function where the reference or the base outcome in the larges
 library(nnet)
 ```
 ## Univariate model
+Using variable age as example:
+
 ```{r}
 mlog_nnet<- multinom(cat_fbs ~ age, data= clean_data)
 summary(mlog_nnet)
@@ -208,6 +240,18 @@ And running vglm, we will get this:
 ```{r}
 summary(mod2)
 ```
+Summary:
+Despite slight differences in formatting, both models are showing identical coefficient estimates for the relationship between age and the outcome cat_fbs2 (or cat_fbs_relev).
+
+For example:
+Prediabetes intercept: -2.70005
+Diabetes intercept: -3.55687
+age coefficient (Diabetes vs. Normal): 0.03009
+age coefficient (Prediabetes vs. Normal): 0.03095
+
+These values match perfectly, confirming both models fit the same data and are yielding the same parameter estimates.
+
+
 ```{r}
 confint(mod2)
 ```
@@ -338,6 +382,13 @@ Using multivariate model with age, gender and hypertension as independent variab
 mod4 <- vglm(cat_fbs2 ~ age+gender+ hpt, family = multinomial, data = clean_data)
 summary(mod4)
 ```
-fff
+1.Age
+For each one-year increase in age, the odds of being diabetic (vs. normal) increase by about 2.8% (OR ≈ 1.03, p < 0.001). Similarly, each year of age increases the odds of being prediabetic (vs. normal) by about 2.8% (OR ≈ 1.03, p < 0.001). This shows that age is a significant factor that increases the risk of abnormal fasting blood sugar levels.
 
+2. Gender (Male vs. Female)
+There is no significant difference between males and females in the odds of being diabetic (p = 0.625). However, males have significantly higher odds of being prediabetic compared to females (OR ≈ 1.25, p = 0.011), suggesting that men are more likely to be prediabetic.
 
+3. Hypertension (No vs. Yes)
+Individuals without hypertension have significantly lower odds of being diabetic (vs. normal), with an odds ratio of about 0.60 (p = 0.0086). They also have lower odds of being prediabetic (OR ≈ 0.53, p < 0.001). This suggests that not having hypertension is associated with a lower risk of abnormal fasting blood sugar levels.
+
+Overall, these findings highlight that age and hypertension status are important predictors of fasting blood sugar categories, with gender playing a role in prediabetes risk.
