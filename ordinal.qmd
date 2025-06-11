@@ -14,6 +14,7 @@ format:
 <img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
 
 # Introduction
+
 Ordinal logistic regression is a statistical modeling technique used to analyze data with an ordinal outcome variable, where the categories have a natural ordering (such as "low", "medium", and "high"). Unlike nominal logistic regression, which is designed for unordered categories, ordinal logistic regression accounts for the ordered nature of the dependent variable and estimates the odds of an observation falling at or below each category based on one or more independent variables. It is particularly useful in studies examining attitudes, perceptions, or clinical outcomes with graded severity, and it provides insights into how predictor variables influence the likelihood of moving up or down the ordinal scale.
 
 # Load packages
@@ -28,7 +29,9 @@ library(haven)
 ```
 
 # About the dataset
+
 This dataset derived from a health or metabolic syndrome screening study. It includes anthropometric, biochemical, and lifestyle variables. The primary outcome of interest for your analysis is fasting blood sugar (fbs).
+
 The dataset consist of the following variables;
 
 - codesub: Participant code or ID.
@@ -68,9 +71,11 @@ glimpse(datao)
 ```{r}
 summary(datao)
 ```
+
 There are several data missing in the variable. Hence, we need to handle these missing data prior to continuing with analysis.
 
 ## Handling missing data
+
 In this practice, we remove any row with missing data. 
 ```{r}
 clean_datao <- na.omit(datao)
@@ -107,9 +112,13 @@ library(ordinal)
 ```
 
 Now, we will estimate the model using the proportional odds model or cumulative link model.
+
 In ordinal package, we can use the function clm() to run the maximum likelihood estimates
+
 In this assignment, we will use the following independent variable:
+
 - gender (female and male)
+
 - hypertension (yes and no)
 
 ```{r}
@@ -128,7 +137,7 @@ tidy(ord1, exponentiate = TRUE)
 
 2. Absence of hypertension associated with lower categories of FBS level. Those without hypertension have 0.44 times the odds (i.e., 56% lower odds) of being in a higher outcome category compared to those with hypertension.
 
-##Using MASS package
+## Using MASS package
 ```{r}
 library(MASS)
 ```
@@ -138,13 +147,15 @@ ord2 <- MASS::polr(cat_fbs ~ gender + hpt, data = clean_datao)
 summary(ord2)
 
 ```
+
 By using both ordinal and MASS package, the estimates value are the same
 
 # Inferences
-##Using ordinal package
+## Using ordinal package
 ```{r}
 tidy(ord1, exponentiate = TRUE, conf.int = TRUE)
 ```
+
 Interpretation:
 
 1. Being male (compared to female) is significantly associated with higher odds of being in a higher category of the ordinal outcome. Specifically, males have approximately 1.20 times higher odds (95% CI: 1.04–1.40, p = 0.015) of being in a higher outcome category.
@@ -153,15 +164,20 @@ Interpretation:
 
 # Prediction
 
-##Using ordinal package
+## Using ordinal package
 ```{r}
+detach("package:MASS", unload = TRUE) # use this if have problem with select() function
 new.datao <- clean_datao %>% select(-cat_fbs)  # if dataset is clean_datao and column exists
 predfbs <- predict(ord1, newdata = new.datao)
 head(predfbs$fit)
 ```
+
 For the first observation, there is:
+
 - A 55% probability of being in the Low category.
+
 - A 30% probability of being in the Moderate category.
+
 - A 15% probability of being in the High category.
 
 ```{r}
@@ -170,16 +186,24 @@ head(classfbs$fit,20)
 ```
 
 -All 20 observations were predicted to be in the “Low” category.
+
 -No observations were predicted to be in the Moderate or High categories.
 
-##Using MASS package
+## Using MASS package
 ```{r}
 prob_polr <- predict(ord2, type = 'probs')
 head(prob_polr)
 ```
+
 For the first observation, there is:
+
 - A 55% probability of being in the Low category.
+
 - A 30% probability of being in the Moderate category.
+
 - A 15% probability of being in the High category.
 
+Here, we can see that both packages give the sam result of probability for each category. 
 
+# Github link
+https://github.com/Aina0710/DrPH1_SEM_2/tree/main
