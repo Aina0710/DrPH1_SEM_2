@@ -183,7 +183,7 @@ print(box_plot_sleep)
 # Colored scatter plot for Sleeping Score vs Working Hours Across Department
 colored_scatter_plot <- ggplot(sleep2, aes(x = work_hours, y = total_score, color = department)) +
   geom_point(size = 3, alpha = 0.7) +
-  labs(title = "Sleeping Score Across Department",
+  labs(title = "Sleeping Score vs Working Hours Across Department",
        x = "Work Hours",
        y = "Sleeping Score",
        color = "Department") +
