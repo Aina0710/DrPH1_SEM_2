@@ -1,0 +1,197 @@
+---
+title: "Data Visualization"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
+---
+<img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
+
+# Introduction
+
+Data visualization is the graphical representation of data to help identify trends, patterns, and outliers. R is a powerful tool for data visualization due to its wide range of built-in functions and specialized packages. Through this assignent, we will visualised data regarding sleep score among nurses in two tertiary hospital in Kelantan.
+
+# About the Data
+The data comprises 462 participants distributed across two tertiary hospitals in Kelantan. The data was collected for MPH study. 
+
+The outcome of interest is a continuous sleep score (total_score), which quantitatively measures sleep quality. The sleep score further categorised into poor or good (sleep_quality). Explanatory variables include both individual-level characteristics (e.g., age, gender, marital status, position, years of service, work hours, presence of comorbidities) and department- or hospital-level factors (e.g., type of department, institutional policies, shift schedules).
+
+# Variables
+The data consist of several variables. The following are list of variables in the data:
+
+- id: participants identification
+
+- hospital: tertiary hospital (Hospital Universiti Sains Malaysia or Hospital Raja Perempuan Zainab II)
+
+- age: participants' age in years (continuous variable)
+
+- gender: participants gender (perempuan or lelaki)
+
+- race: participant race (Melayu, Cina etc)
+
+- status: bujang, berkahwin, bercerai (samaada hidup atau mati)
+
+- child: number of participants' child (continuous variable)
+
+- education: Degree/Master/PHD, Diploma dengan Post-Basic, Diploma/Kolej, Sijil (SPM/STPM)
+
+- position: Jururawat Masyarakat, Jururawat, Penyelia Jururawat, Ketua Jururawat
+
+- department: Emergency, Pediatrics, Surgical or Medical
+
+- schedule: shift or non-shift
+
+- total_service: total years of services (continuos variable)
+
+- work_hours: hours of working (continuos variable)
+
+- commuting_injury: history of commuting injury (yes/no)
+
+- medication_error: history of medication error (yes/no)
+
+- comorbid: yes/no
+
+- total_score: total score from validated questionnaire (continuos variable)
+
+- sleep_quality: poor or good
+
+# Load packages
+```{r}
+library(tidyverse)
+library(haven)
+library(readxl)
+library(gtsummary)
+library(summarytools)
+library(ggplot2)
+library(GGally)
+library(patchwork)
+```
+
+# Read dataset
+```{r}
+sleep <- read_excel("sleep2.xlsx")
+glimpse(sleep)
+```
+
+# Data wrangling
+```{r}
+sleep<-sleep %>% mutate_if(is.character,~ as_factor(.))
+glimpse(sleep)
+```
+# Exploratory Data Analysis
+```{r}
+summary(sleep)
+sleep %>% select(-id) %>% 
+  tbl_summary(
+    statistic = list(all_continuous() ~
+                                 "{mean} ({sd})")) %>% 
+  bold_labels()
+
+```
+# Dataset with choosen variable
+
+```{r}
+sleep2<- sleep %>% select(hospital, department, work_hours, medication_error, 
+                          sleep_quality, total_score)
+summary(sleep2)
+```
+# Descriptive analysis
+```{r}
+# Create the descriptive table
+table_summary <- sleep2 %>%
+  tbl_summary(
+    by = hospital,
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+  ) %>%
+  add_overall() %>%
+  modify_header(label ~ "**Variable**") %>%
+  modify_spanning_header(
+    all_stat_cols() ~ "**Summary Statistics**"
+  ) %>%
+  modify_caption("**Descriptive Statistics of Tertiary Hospital Dataset**")
+
+# Print the table
+table_summary
+```
+Comment:
+
+# Data Visualization Methods
+
+## Bar plot
+
+The bar plot is used to visualize the distribution of nurses among departments across the tertiary hospital. 
+
+```{r}
+# Bar plot for departments count
+department_counts <- ggplot(sleep2, aes(x = department)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Participants Across Department",
+       x = "Department",
+       y = "Count") +
+  theme_minimal()
+
+print(department_counts)
+```
+```{r}
+# Grouped bar plot for Department and Sleep Quality
+library(scales)
+
+grouped_bar_plot <- ggplot(sleep, aes(x = hospital, fill = interaction(department, sleep_quality))) +
+  geom_bar(position = "dodge") +
+  labs(title = "Sleep Quality and Department of Nurses Across Hospital",
+       x = "Hospital",
+       y = "Count",
+       fill = "Sleep Quality and Department") +
+  theme_minimal() +
+  scale_fill_manual(values = hue_pal()(8))
+
+print(grouped_bar_plot)
+```
+Combining the plot
+```{r}
+# Combine the plots using patchwork
+combined_plot1 <- department_counts / grouped_bar_plot
+
+# Display the combined plot
+print(combined_plot1)
+```
+
+## Box plot
+```{r}
+# Create box plot for Sleep Score
+box_plot_sleep <- ggplot(sleep2, aes(x = department, y = total_score, fill = hospital)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Sleeping Score by Department Across Hospital",
+       x = "Department",
+       y = "Sleep Score") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3")
+
+print(box_plot_sleep)
+```
+## Scatter plot
+```{r}
+# Colored scatter plot for Sleeping Score vs Working Hours Across Department
+colored_scatter_plot <- ggplot(sleep2, aes(x = work_hours, y = total_score, color = department)) +
+  geom_point(size = 3, alpha = 0.7) +
+  labs(title = "Sleeping Score Across Department",
+       x = "Work Hours",
+       y = "Sleeping Score",
+       color = "Department") +
+  theme_minimal()
+
+# Display the scatter plot
+print(colored_scatter_plot)
+```
+
+# Github link
+<https://github.com/Aina0710/DrPH1_SEM_2/tree/main>
