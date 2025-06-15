@@ -97,7 +97,7 @@ sleep %>% select(-id) %>%
 # Dataset with choosen variable
 
 ```{r}
-sleep2<- sleep %>% select(hospital, department, work_hours, medication_error, 
+sleep2<- sleep %>% select(hospital, department, work_hours, 
                           sleep_quality, total_score)
 summary(sleep2)
 ```
@@ -123,6 +123,28 @@ table_summary <- sleep2 %>%
 table_summary
 ```
 Comment:
+
+Departmental Distribution
+
+Overall, most participants were from the medical ward (38%), followed by paediatrics (23%), surgical (21%), and emergency departments (18%). HUSM had higher representation from the emergency department (29%), while HRPZ II had more from paediatrics (35%) and medical wards (42%).
+
+Work Hours
+
+Mean weekly work hours were 46.4 (SD = 7.9), with HRPZ II staff working longer hours (47.8, SD = 9.5) than those at HUSM (44.9, SD = 5.3).
+
+Sleep Quality
+
+Poor sleep was reported by 70% of participants, higher among HUSM staff (77%) than HRPZ II (63%). HRPZ II reported better sleep quality overall.
+
+Total Score
+
+The overall mean score was 7.1 (SD = 3.2), with HUSM scoring higher (7.7, SD = 3.0) than HRPZ II (6.6, SD = 3.2), though interpretation depends on the scoring context.
+
+Summary
+
+Differences between hospitals were noted in departmental representation, work hours, and sleep quality. HRPZ II staff worked longer hours but reported better sleep, while HUSM showed higher mean scores and poorer sleep.
+
+
 
 # Data Visualization Methods
 
@@ -164,6 +186,13 @@ combined_plot1 <- department_counts / grouped_bar_plot
 # Display the combined plot
 print(combined_plot1)
 ```
+Comment:
+
+The first chart shows that most nurses were from the medical ward, followed by paediatrics, surgical, and emergency departments.
+
+The second chart compares sleep quality across departments in both hospitals. At HUSM, poor sleep quality was more common across all departments, especially in the emergency and medical wards. In contrast, HRPZ II showed a more balanced pattern, with more nurses reporting good sleep, particularly in the paediatrics and medical wards.
+
+These results suggest that nurses in HRPZ II may have better working conditions or support, while those in HUSM, especially in high-pressure departments, may be at higher risk of sleep disturbances.
 
 ## Box plot
 ```{r}
@@ -178,6 +207,14 @@ box_plot_sleep <- ggplot(sleep2, aes(x = department, y = total_score, fill = hos
 
 print(box_plot_sleep)
 ```
+Comment:
+
+The box plot compares sleep scores across departments in HUSM and HRPZ II. Higher scores indicate poorer sleep quality.
+
+Overall, nurses at HUSM reported higher median sleep scores, especially in the emergency and surgical departments, suggesting poorer sleep quality compared to HRPZ II. HRPZ II showed lower and more consistent sleep scores, particularly in the paediatrics and medical wards.
+
+These results suggest that nurses in HUSM may experience more sleep disturbances, possibly due to higher workload or less favorable working conditions.
+
 ## Scatter plot
 ```{r}
 # Colored scatter plot for Sleeping Score vs Working Hours Across Department
@@ -192,6 +229,20 @@ colored_scatter_plot <- ggplot(sleep2, aes(x = work_hours, y = total_score, colo
 # Display the scatter plot
 print(colored_scatter_plot)
 ```
+Comment:
+
+The scatter plot illustrates the relationship between working hours and sleep scores among nurses across four clinical departments: Emergency, Paediatrics, Surgical, and Medical. Sleep scores are used as a proxy for sleep quality, with higher scores indicating poorer sleep.
+
+Overall, the distribution of points suggests no clear linear relationship between working hours and sleep scores. The majority of data points are concentrated between 40 to 60 working hours per week, regardless of department, indicating this is the most common workload range among participants.
+
+Notably, several nurses within this typical range still reported high sleep scores (above 10), suggesting poor sleep quality may occur even without excessively long working hours. This may indicate the influence of additional factors such as shift patterns, stress, or work environment.
+
+A small number of outliers reported extremely long working hours (over 80 hours per week)—particularly within the paediatrics and surgical departments. Among these, some individuals also showed high sleep scores, suggesting a potential link between prolonged working hours and poorer sleep in certain high-demand units.
+
+Conversely, participants reporting lower sleep scores (indicating better sleep) were distributed across all departments and various working hours, further supporting the notion that factors beyond work duration likely contribute to sleep outcomes.
+
+In summary, while the plot does not show a strong direct correlation between work hours and sleep quality, the presence of poor sleep at both typical and extended work hours highlights the need for broader assessment of working conditions and psychosocial stressors within hospital departments.
+
 
 # Github link
 <https://github.com/Aina0710/DrPH1_SEM_2/tree/main>
