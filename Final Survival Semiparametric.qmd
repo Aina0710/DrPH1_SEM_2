@@ -1,19 +1,29 @@
 ---
-title: "Final Survival Semiparametric"
-author: "Amin Aina Shu"
-format: html
-editor: visual
+title: "Survival Semiparametric"
+format:
+  html:
+    theme: sketchy
+    fontsize: 1.1em
+    linestretch: 1.5
+    toc: true
+    toc-location: left-body
+    toc-depth: 2
+    number-sections: true
+    number-depth: 3
 ---
+<img src="members.png" style="border-radius: 15px; display: block; margin: auto;" width="400px" />
 
-## Checking the dataset
+# Load packages
 
 ```{r}
 library(haven)
 library(survival)
 library(survminer)
 library(dplyr)
-
-data1 <- read_dta("C:/Users/amin9/OneDrive/R working directory/assignment prof kim drph1 sem 2/survival/semiparametric/stroke_fatality.dta")
+```
+# Load dataset
+```{r}
+data1 <- read_dta("stroke_fatality.dta")
 
 # View structure
 str(data1)
@@ -29,6 +39,7 @@ The initial dataset comprised 226 observations with 49 variables related to soci
 
 Upon exploration using the `str()` and `summary()` functions, several variables were identified to contain suspicious or non-informative coding (e.g., 8, 9) or even excessive missingness.
 
+# Handling missing data
 ## Visualising the problematic data
 
 ```{r}
@@ -178,7 +189,7 @@ The chosen variables were `time2`, `status3b` (event indicator), `age2`, `sex3`,
 
 This step ensured the inclusion of well-defined, binary or categorical predictors and improved the quality and interpretability of the analysis.
 
-## Summarizing and visualising the cleaned dataset
+# Summarizing and visualising the cleaned dataset
 
 ```{r}
 # Run the summarize function
@@ -280,7 +291,7 @@ Prior to modeling, variables were converted to appropriate types.
 
 Categorical variables were converted to factors and the outcome variable (status3b) was transformed into a numeric binary indicator (0 = alive, 1 = dead). This is essential for ensuring compatibility with the Cox proportional hazards model.
 
-## Create Survival Object
+# Create Survival Object
 
 ```{r}
 surv_obj <- Surv(time = data3$time2, event = data3$status3b)
@@ -290,7 +301,7 @@ A survival object was created using the `Surv()` function, which combines the ti
 
 This served as the basis for fitting the semiparametric Cox model and for plotting survival curves.
 
-## Fit Cox Proportional Hazard Model (Semi-parametic)
+# Fit Cox Proportional Hazard Model (Semi-parametic)
 
 ```{r}
 cox_model <- coxph(surv_obj ~ age2 + sex3 + hpt2cat + dm2cat + dyslipid2cat + referral2cat + icd10cat3, data = data3)
@@ -314,7 +325,7 @@ The Cox proportional hazards model was fitted using the cleaned dataset (data3).
 
 -   Overall, the model demonstrated acceptable discrimination (concordance index = 0.739), and global tests (Likelihood Ratio, Wald, and Score) were statistically significant, indicating a good model fit.
 
-## Check Proportional Hazard Assumption
+# Check Proportional Hazard Assumption
 
 ```{r}
 cox.zph(cox_model)
@@ -324,7 +335,7 @@ cox.zph(cox_model)
 
 -   The **global test** was borderline significant (*p* = 0.0506), further supporting the need to consider alternative modeling strategies such as stratification or time-varying covariates for those variables.
 
-## Plot survival curves by Sex
+# Plot survival curves by Sex
 
 ```{r}
 ggsurvplot(
@@ -343,7 +354,7 @@ Although males appeared to have slightly better survival, the log-rank test indi
 
 This visual representation complements the Cox model finding, which also did not show a significant effect of sex on survival outcome.
 
-## Predict Survival for a Hypothetical Patient
+# Predict Survival for a Hypothetical Patient
 
 ```{r}
 library(survival)
@@ -412,3 +423,6 @@ Day 60: **15%**
 These estimates indicate a gradual decline in survival probability over time, with a particularly steep drop beyond day 20. By day 30, the patient’s survival probability is already below 50%, highlighting the urgency of clinical attention in such cases.
 
 Hence, the establishment of this surival semiparametric model enables **individualized prognostic insights** tailored to a patient’s profile, which can supports **clinical decision-making** and priority setting, especially for follow-up care or palliative discussions. Besides, it also can enhances **patient–clinician communication** by providing quantifiable risk trajectories. In conclusion, it can provide a valuable tool for **evidence-based, patient-centered care** in stroke management itself.
+
+# Github link
+<https://github.com/Aina0710/DrPH1_SEM_2/tree/main>
